@@ -5,8 +5,8 @@ Universidade Tecnológica Federal do Paraná – Campus Santa Helena.
 
 ## 👥 Equipe
 
-- Brandon Monteiro Donisthorpe – RA: 2758890
 - Eduardo Andrei Staudt – RA: 2783045
+- Brandon Monteiro Donisthorpe – RA: 2758890
 - Orientador: Prof. Giuvane Conti
 
 ---
