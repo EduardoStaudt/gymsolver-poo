@@ -1,0 +1,14 @@
+# Compilados Java
+*.class
+/out/
+/bin/
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Outros
+*.log
