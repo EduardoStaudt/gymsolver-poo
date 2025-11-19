@@ -2,8 +2,9 @@ package model;
 // GymSolverApp.java
 // Classe principal da aplicação JavaFX
 
-// OBS: se você estiver usando packages, coloque algo como:
-// package br.edu.utfpr.gymsolver;
+import java.util.Objects;
+import javafx.scene.paint.Color;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,6 +13,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+// OBS: se você estiver usando packages, coloque algo como:
+// package br.edu.utfpr.gymsolver;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
@@ -26,25 +29,105 @@ public class GymSolverApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("GymSolver - Sistema de Gerenciamento de Academia");
+        // Título da janela (barra do Windows)
+        primaryStage.setTitle("GymSolver - Painel da Academia");
 
-        // TabPane será o container com as abas principais
+        // ---------------------------------------------------------------------
+        // TABPANE CENTRAL (conteúdo principal)
+        // ---------------------------------------------------------------------
         TabPane tabPane = new TabPane();
+        tabPane.getStyleClass().add("main-tab-pane");
 
         tabPane.getTabs().add(criarTabClientes());
         tabPane.getTabs().add(criarTabFuncionarios());
         tabPane.getTabs().add(criarTabPlanosTreino());
         tabPane.getTabs().add(criarTabPlanosAssinatura());
+        tabPane.getTabs().add(criarTabSobre());
 
-        // Aba "Sobre" apenas para mostrar o que o sistema faz
-        Tab tabSobre = new Tab("Sobre", criarPainelSobre());
-        tabSobre.setClosable(false);
-        tabPane.getTabs().add(tabSobre);
+        // ---------------------------------------------------------------------
+        // HEADER (topo), com título do sistema
+        // ---------------------------------------------------------------------
+        Label titulo = new Label("GymSolver");
+        titulo.getStyleClass().add("header-title");
 
-        Scene scene = new Scene(tabPane, 1000, 600);
+        Label subtitulo = new Label("Painel de gerenciamento da academia");
+        subtitulo.getStyleClass().add("header-subtitle");
+
+        Region headerSpacer = new Region();
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+
+        HBox header = new HBox(10, titulo, headerSpacer, subtitulo);
+        header.getStyleClass().add("header-bar");
+
+        // ---------------------------------------------------------------------
+        // SIDEBAR (menu lateral)
+        // ---------------------------------------------------------------------
+        VBox sidebar = new VBox(8);
+        sidebar.getStyleClass().add("sidebar");
+
+        Label lblMenu = new Label("MENU");
+        // o CSS já estiliza qualquer label dentro da sidebar
+        ToggleGroup navGroup = new ToggleGroup();
+
+        ToggleButton btnClientes = criarBotaoSidebar("Clientes", navGroup, tabPane, 0);
+        ToggleButton btnFuncionarios = criarBotaoSidebar("Funcionários", navGroup, tabPane, 1);
+        ToggleButton btnPlanosTreino = criarBotaoSidebar("Planos de Treino", navGroup, tabPane, 2);
+        ToggleButton btnPlanosAssinatura = criarBotaoSidebar("Planos de Assinatura", navGroup, tabPane, 3);
+        ToggleButton btnSobre = criarBotaoSidebar("Sobre", navGroup, tabPane, 4);
+
+        // Deixa "Clientes" como tela inicial selecionada
+        navGroup.selectToggle(btnClientes);
+
+        sidebar.getChildren().addAll(
+                lblMenu,
+                btnClientes,
+                btnFuncionarios,
+                btnPlanosTreino,
+                btnPlanosAssinatura,
+                btnSobre
+        );
+
+        // ---------------------------------------------------------------------
+        // LAYOUT PRINCIPAL (BorderPane)
+        // ---------------------------------------------------------------------
+        BorderPane root = new BorderPane();
+        root.getStyleClass().add("app-root");
+
+        root.setTop(header);
+        root.setLeft(sidebar);
+        root.setCenter(tabPane);
+
+        BorderPane.setMargin(tabPane, new Insets(16));
+        BorderPane.setMargin(sidebar, new Insets(16, 0, 16, 16));
+
+        Scene scene = new Scene(root, 1200, 700);
+        // deixa o fundo da cena escuro (caso algo escape do CSS)
+        scene.setFill(Color.web("#050509"));
+        // Carrega o CSS do tema dark
+        scene.getStylesheets().add(
+            Objects.requireNonNull(
+                GymSolverApp.class.getResource("/view/dark-theme.css")
+        ).toExternalForm()
+);
+
+
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
+    /**
+     * Cria um botão de menu lateral (sidebar) que, ao ser clicado,
+     * seleciona a aba correspondente do TabPane.
+     */
+    private ToggleButton criarBotaoSidebar(String texto, ToggleGroup grupo, TabPane tabPane, int tabIndex) {
+        ToggleButton btn = new ToggleButton(texto);
+        btn.setToggleGroup(grupo);
+        btn.getStyleClass().add("sidebar-button");
+        btn.setMaxWidth(Double.MAX_VALUE); // faz o botão ocupar toda a largura
+        btn.setOnAction(e -> tabPane.getSelectionModel().select(tabIndex));
+        return btn;
+    }
+
 
     // -----------------------------------------------------------
     // ABA CLIENTES
@@ -53,9 +136,10 @@ public class GymSolverApp extends Application {
         Tab tab = new Tab("Clientes");
         tab.setClosable(false);
 
-        // Tabela
+        // ----------------- TABELA -----------------
         TableView<Cliente> tabela = new TableView<>();
         tabela.setItems(repositorio.getClientes());
+        tabela.getStyleClass().add("data-table"); // só pra aplicar o CSS da tabela
 
         TableColumn<Cliente, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -77,10 +161,10 @@ public class GymSolverApp extends Application {
 
         tabela.getColumns().addAll(colId, colNome, colEmail, colTelefone, colPlanoAssinatura, colPlanoTreino);
 
-        // Formulário
+        // ----------------- FORMULÁRIO -----------------
         TextField txtId = new TextField();
         txtId.setPromptText("ID (gerado automaticamente)");
-        txtId.setDisable(true); // não deixo o usuário digitar ID
+        txtId.setDisable(true);
 
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do cliente");
@@ -99,12 +183,19 @@ public class GymSolverApp extends Application {
         cbPlanoTreino.setPromptText("Selecione o plano de treino");
         atualizarComboPlanosTreino(cbPlanoTreino);
 
+        // ----------------- BOTÕES -----------------
         Button btnNovo = new Button("Novo");
         Button btnSalvar = new Button("Salvar");
         Button btnExcluir = new Button("Excluir");
         Button btnLimpar = new Button("Limpar");
 
-        // Ao selecionar um cliente na tabela, preenchermos o formulário para edição
+        // classes CSS pros botões (cores)
+        btnNovo.getStyleClass().add("button-ghost");
+        btnSalvar.getStyleClass().add("button-primary");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        // Quando seleciona um cliente na tabela, preenche o form
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, novoSel) -> {
             if (novoSel != null) {
                 txtId.setText(String.valueOf(novoSel.getId()));
@@ -116,7 +207,7 @@ public class GymSolverApp extends Application {
             }
         });
 
-        // Botão Novo: apenas gera um novo ID e limpa os campos
+        // Ações dos botões (é o mesmo código que você já tinha)
         btnNovo.setOnAction(e -> {
             int novoId = repositorio.gerarProximoIdCliente();
             txtId.setText(String.valueOf(novoId));
@@ -128,7 +219,6 @@ public class GymSolverApp extends Application {
             tabela.getSelectionModel().clearSelection();
         });
 
-        // Botão Salvar: se ID está vazio, gera um novo; se já existe, atualiza
         btnSalvar.setOnAction(e -> {
             String nome = txtNome.getText();
             if (nome == null || nome.isBlank()) {
@@ -149,7 +239,6 @@ public class GymSolverApp extends Application {
             String planoAssinatura = cbPlanoAssinatura.getValue();
             String planoTreino = cbPlanoTreino.getValue();
 
-            // se já existe, atualiza; senão, adiciona
             Cliente clienteExistente = repositorio.buscarClientePorId(id);
             if (clienteExistente == null) {
                 Cliente novo = new Cliente(id, nome, email, telefone,
@@ -161,11 +250,10 @@ public class GymSolverApp extends Application {
                 clienteExistente.setTelefone(telefone);
                 clienteExistente.setPlanoAssinatura(planoAssinatura);
                 clienteExistente.setPlanoTreino(planoTreino);
-                tabela.refresh(); // força atualização visual
+                tabela.refresh();
             }
         });
 
-        // Botão Excluir
         btnExcluir.setOnAction(e -> {
             Cliente selecionado = tabela.getSelectionModel().getSelectedItem();
             if (selecionado == null) {
@@ -177,13 +265,12 @@ public class GymSolverApp extends Application {
                     cbPlanoAssinatura, cbPlanoTreino, tabela);
         });
 
-        // Botão Limpar
         btnLimpar.setOnAction(e -> {
             limparCamposCliente(txtId, txtNome, txtEmail, txtTelefone,
                     cbPlanoAssinatura, cbPlanoTreino, tabela);
         });
 
-        // Layout do formulário (grid simples)
+        // ----------------- LAYOUT DO FORMULÁRIO -----------------
         GridPane formulario = new GridPane();
         formulario.setHgap(10);
         formulario.setVgap(10);
@@ -210,12 +297,26 @@ public class GymSolverApp extends Application {
         HBox botoes = new HBox(10, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox vbox = new VBox(10, tabela, formulario, botoes);
-        vbox.setPadding(new Insets(10));
+        // ----------------- AQUI ENTRA O "CARD" -----------------
+        // Card que envolve formulário + botões, com fundo escuro e bordas arredondadas
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        // Layout final da aba: tabela em cima, card embaixo
+        // Layout final da aba: tabela em cima, card embaixo
+        VBox vbox = new VBox(12, tabela, cardFormulario);
+
+        // topo = 0, lados = 16, bottom = 16
+        vbox.setPadding(new Insets(0, 16, 16, 16));
+
+        VBox.setVgrow(tabela, Priority.ALWAYS);
+        tab.setContent(vbox);
+
 
         tab.setContent(vbox);
         return tab;
     }
+
 
     private void limparCamposCliente(TextField txtId, TextField txtNome, TextField txtEmail, TextField txtTelefone, ComboBox<String> cbPlanoAssinatura, ComboBox<String> cbPlanoTreino, TableView<Cliente> tabela) {
         txtId.clear();
@@ -250,8 +351,10 @@ public class GymSolverApp extends Application {
         Tab tab = new Tab("Funcionários");
         tab.setClosable(false);
 
+        // ----------------- TABELA -----------------
         TableView<Funcionario> tabela = new TableView<>();
         tabela.setItems(repositorio.getFuncionarios());
+        tabela.getStyleClass().add("data-table");
 
         TableColumn<Funcionario, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -267,6 +370,7 @@ public class GymSolverApp extends Application {
 
         tabela.getColumns().addAll(colId, colNome, colCargo, colCpf);
 
+        // ----------------- FORMULÁRIO -----------------
         TextField txtId = new TextField();
         txtId.setPromptText("ID (gerado automaticamente)");
         txtId.setDisable(true);
@@ -275,16 +379,23 @@ public class GymSolverApp extends Application {
         txtNome.setPromptText("Nome do funcionário");
 
         TextField txtCargo = new TextField();
-        txtCargo.setPromptText("Cargo (instrutor, recepcionista...)");
+        txtCargo.setPromptText("Cargo (instrutor, recepcionista, etc.)");
 
         TextField txtCpf = new TextField();
-        txtCpf.setPromptText("CPF");
+        txtCpf.setPromptText("CPF do funcionário");
 
+        // ----------------- BOTÕES -----------------
         Button btnNovo = new Button("Novo");
         Button btnSalvar = new Button("Salvar");
         Button btnExcluir = new Button("Excluir");
         Button btnLimpar = new Button("Limpar");
 
+        btnNovo.getStyleClass().add("button-ghost");
+        btnSalvar.getStyleClass().add("button-primary");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        // Preenche o formulário ao selecionar na tabela
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, novoSel) -> {
             if (novoSel != null) {
                 txtId.setText(String.valueOf(novoSel.getId()));
@@ -294,6 +405,7 @@ public class GymSolverApp extends Application {
             }
         });
 
+        // Ações dos botões
         btnNovo.setOnAction(e -> {
             int novoId = repositorio.gerarProximoIdFuncionario();
             txtId.setText(String.valueOf(novoId));
@@ -321,14 +433,14 @@ public class GymSolverApp extends Application {
             String cargo = txtCargo.getText();
             String cpf = txtCpf.getText();
 
-            Funcionario existente = repositorio.buscarFuncionarioPorId(id);
-            if (existente == null) {
+            Funcionario funcExistente = repositorio.buscarFuncionarioPorId(id);
+            if (funcExistente == null) {
                 Funcionario novo = new Funcionario(id, nome, cargo, cpf);
                 repositorio.getFuncionarios().add(novo);
             } else {
-                existente.setNome(nome);
-                existente.setCargo(cargo);
-                existente.setCpf(cpf);
+                funcExistente.setNome(nome);
+                funcExistente.setCargo(cargo);
+                funcExistente.setCpf(cpf);
                 tabela.refresh();
             }
         });
@@ -355,6 +467,7 @@ public class GymSolverApp extends Application {
             tabela.getSelectionModel().clearSelection();
         });
 
+        // ----------------- LAYOUT -----------------
         GridPane formulario = new GridPane();
         formulario.setHgap(10);
         formulario.setVgap(10);
@@ -375,12 +488,23 @@ public class GymSolverApp extends Application {
         HBox botoes = new HBox(10, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox vbox = new VBox(10, tabela, formulario, botoes);
-        vbox.setPadding(new Insets(10));
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        // Layout final da aba: tabela em cima, card embaixo
+        VBox vbox = new VBox(12, tabela, cardFormulario);
+
+        // topo = 0, lados = 16, bottom = 16
+        vbox.setPadding(new Insets(0, 16, 16, 16));
+
+        VBox.setVgrow(tabela, Priority.ALWAYS);
+        tab.setContent(vbox);
+
 
         tab.setContent(vbox);
         return tab;
     }
+
 
     // -----------------------------------------------------------
     // ABA PLANOS DE TREINO
@@ -389,8 +513,10 @@ public class GymSolverApp extends Application {
         Tab tab = new Tab("Planos de Treino");
         tab.setClosable(false);
 
+        // ----------------- TABELA -----------------
         TableView<PlanoTreino> tabela = new TableView<>();
         tabela.setItems(repositorio.getPlanosTreino());
+        tabela.getStyleClass().add("data-table");
 
         TableColumn<PlanoTreino, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -406,6 +532,7 @@ public class GymSolverApp extends Application {
 
         tabela.getColumns().addAll(colId, colNome, colDescricao, colObjetivo);
 
+        // ----------------- FORMULÁRIO -----------------
         TextField txtId = new TextField();
         txtId.setPromptText("ID (gerado automaticamente)");
         txtId.setDisable(true);
@@ -413,17 +540,25 @@ public class GymSolverApp extends Application {
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do plano de treino");
 
-        TextField txtDescricao = new TextField();
-        txtDescricao.setPromptText("Descrição resumida");
+        TextArea txtDescricao = new TextArea();
+        txtDescricao.setPromptText("Descrição do plano (ex.: divisão de treinos, volume, etc.)");
+        txtDescricao.setPrefRowCount(3);
 
         TextField txtObjetivo = new TextField();
-        txtObjetivo.setPromptText("Ex: Hipertrofia, Emagrecimento...");
+        txtObjetivo.setPromptText("Objetivo (hipertrofia, emagrecimento, etc.)");
 
+        // ----------------- BOTÕES -----------------
         Button btnNovo = new Button("Novo");
         Button btnSalvar = new Button("Salvar");
         Button btnExcluir = new Button("Excluir");
         Button btnLimpar = new Button("Limpar");
 
+        btnNovo.getStyleClass().add("button-ghost");
+        btnSalvar.getStyleClass().add("button-primary");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        // Preenche form ao selecionar na tabela
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, novoSel) -> {
             if (novoSel != null) {
                 txtId.setText(String.valueOf(novoSel.getId()));
@@ -433,6 +568,7 @@ public class GymSolverApp extends Application {
             }
         });
 
+        // Ações
         btnNovo.setOnAction(e -> {
             int novoId = repositorio.gerarProximoIdPlanoTreino();
             txtId.setText(String.valueOf(novoId));
@@ -460,16 +596,19 @@ public class GymSolverApp extends Application {
             String descricao = txtDescricao.getText();
             String objetivo = txtObjetivo.getText();
 
-            PlanoTreino existente = repositorio.buscarPlanoTreinoPorId(id);
-            if (existente == null) {
+            PlanoTreino planoExistente = repositorio.buscarPlanoTreinoPorId(id);
+            if (planoExistente == null) {
                 PlanoTreino novo = new PlanoTreino(id, nome, descricao, objetivo);
                 repositorio.getPlanosTreino().add(novo);
             } else {
-                existente.setNome(nome);
-                existente.setDescricao(descricao);
-                existente.setObjetivo(objetivo);
+                planoExistente.setNome(nome);
+                planoExistente.setDescricao(descricao);
+                planoExistente.setObjetivo(objetivo);
                 tabela.refresh();
             }
+
+            // Atualiza combos da aba de Clientes
+            atualizarCombosClientes();
         });
 
         btnExcluir.setOnAction(e -> {
@@ -484,6 +623,8 @@ public class GymSolverApp extends Application {
             txtDescricao.clear();
             txtObjetivo.clear();
             tabela.getSelectionModel().clearSelection();
+
+            atualizarCombosClientes();
         });
 
         btnLimpar.setOnAction(e -> {
@@ -494,6 +635,7 @@ public class GymSolverApp extends Application {
             tabela.getSelectionModel().clearSelection();
         });
 
+        // ----------------- LAYOUT -----------------
         GridPane formulario = new GridPane();
         formulario.setHgap(10);
         formulario.setVgap(10);
@@ -514,12 +656,23 @@ public class GymSolverApp extends Application {
         HBox botoes = new HBox(10, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox vbox = new VBox(10, tabela, formulario, botoes);
-        vbox.setPadding(new Insets(10));
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        // Layout final da aba: tabela em cima, card embaixo
+        VBox vbox = new VBox(12, tabela, cardFormulario);
+
+        // topo = 0, lados = 16, bottom = 16
+        vbox.setPadding(new Insets(0, 16, 16, 16));
+
+        VBox.setVgrow(tabela, Priority.ALWAYS);
+        tab.setContent(vbox);
+
 
         tab.setContent(vbox);
         return tab;
     }
+
 
     // -----------------------------------------------------------
     // ABA PLANOS DE ASSINATURA
@@ -528,8 +681,10 @@ public class GymSolverApp extends Application {
         Tab tab = new Tab("Planos de Assinatura");
         tab.setClosable(false);
 
+        // ----------------- TABELA -----------------
         TableView<PlanoAssinatura> tabela = new TableView<>();
         tabela.setItems(repositorio.getPlanosAssinatura());
+        tabela.getStyleClass().add("data-table");
 
         TableColumn<PlanoAssinatura, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -537,7 +692,7 @@ public class GymSolverApp extends Application {
         TableColumn<PlanoAssinatura, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        TableColumn<PlanoAssinatura, Double> colValor = new TableColumn<>("Valor Mensal");
+        TableColumn<PlanoAssinatura, Double> colValor = new TableColumn<>("Valor mensal (R$)");
         colValor.setCellValueFactory(new PropertyValueFactory<>("valorMensal"));
 
         TableColumn<PlanoAssinatura, Integer> colDuracao = new TableColumn<>("Duração (meses)");
@@ -545,12 +700,13 @@ public class GymSolverApp extends Application {
 
         tabela.getColumns().addAll(colId, colNome, colValor, colDuracao);
 
+        // ----------------- FORMULÁRIO -----------------
         TextField txtId = new TextField();
         txtId.setPromptText("ID (gerado automaticamente)");
         txtId.setDisable(true);
 
         TextField txtNome = new TextField();
-        txtNome.setPromptText("Nome do plano (Ex: Mensal, Trimestral)");
+        txtNome.setPromptText("Nome do plano (Mensal, Trimestral, etc.)");
 
         TextField txtValor = new TextField();
         txtValor.setPromptText("Valor mensal (R$)");
@@ -558,11 +714,18 @@ public class GymSolverApp extends Application {
         TextField txtDuracao = new TextField();
         txtDuracao.setPromptText("Duração em meses");
 
+        // ----------------- BOTÕES -----------------
         Button btnNovo = new Button("Novo");
         Button btnSalvar = new Button("Salvar");
         Button btnExcluir = new Button("Excluir");
         Button btnLimpar = new Button("Limpar");
 
+        btnNovo.getStyleClass().add("button-ghost");
+        btnSalvar.getStyleClass().add("button-primary");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        // Preenche form ao selecionar na tabela
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, novoSel) -> {
             if (novoSel != null) {
                 txtId.setText(String.valueOf(novoSel.getId()));
@@ -572,6 +735,7 @@ public class GymSolverApp extends Application {
             }
         });
 
+        // Ações
         btnNovo.setOnAction(e -> {
             int novoId = repositorio.gerarProximoIdPlanoAssinatura();
             txtId.setText(String.valueOf(novoId));
@@ -590,18 +754,11 @@ public class GymSolverApp extends Application {
 
             double valor;
             int duracao;
-
             try {
                 valor = Double.parseDouble(txtValor.getText().replace(",", "."));
-            } catch (Exception ex) {
-                mostrarAlerta("Validação", "Valor mensal inválido.");
-                return;
-            }
-
-            try {
                 duracao = Integer.parseInt(txtDuracao.getText());
-            } catch (Exception ex) {
-                mostrarAlerta("Validação", "Duração em meses inválida.");
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Validação", "Valor mensal e duração devem ser numéricos.");
                 return;
             }
 
@@ -613,20 +770,18 @@ public class GymSolverApp extends Application {
                 id = Integer.parseInt(txtId.getText());
             }
 
-            PlanoAssinatura existente = repositorio.buscarPlanoAssinaturaPorId(id);
-            if (existente == null) {
+            PlanoAssinatura planoExistente = repositorio.buscarPlanoAssinaturaPorId(id);
+            if (planoExistente == null) {
                 PlanoAssinatura novo = new PlanoAssinatura(id, nome, valor, duracao);
                 repositorio.getPlanosAssinatura().add(novo);
             } else {
-                existente.setNome(nome);
-                existente.setValorMensal(valor);
-                existente.setDuracaoMeses(duracao);
+                planoExistente.setNome(nome);
+                planoExistente.setValorMensal(valor);
+                planoExistente.setDuracaoMeses(duracao);
                 tabela.refresh();
             }
 
-            // Atualizar combobox na aba Clientes com os novos planos
-            // (simples: só será atualizado ao abrir o sistema de novo ou podemos
-            //  chamar atualizarComboPlanosAssinatura manualmente se passássemos a referência)
+            atualizarCombosClientes();
         });
 
         btnExcluir.setOnAction(e -> {
@@ -641,6 +796,8 @@ public class GymSolverApp extends Application {
             txtValor.clear();
             txtDuracao.clear();
             tabela.getSelectionModel().clearSelection();
+
+            atualizarCombosClientes();
         });
 
         btnLimpar.setOnAction(e -> {
@@ -651,6 +808,7 @@ public class GymSolverApp extends Application {
             tabela.getSelectionModel().clearSelection();
         });
 
+        // ----------------- LAYOUT -----------------
         GridPane formulario = new GridPane();
         formulario.setHgap(10);
         formulario.setVgap(10);
@@ -662,7 +820,7 @@ public class GymSolverApp extends Application {
         formulario.add(new Label("Nome:"), 0, 1);
         formulario.add(txtNome, 1, 1);
 
-        formulario.add(new Label("Valor Mensal:"), 0, 2);
+        formulario.add(new Label("Valor mensal (R$):"), 0, 2);
         formulario.add(txtValor, 1, 2);
 
         formulario.add(new Label("Duração (meses):"), 0, 3);
@@ -671,33 +829,78 @@ public class GymSolverApp extends Application {
         HBox botoes = new HBox(10, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
 
-        VBox vbox = new VBox(10, tabela, formulario, botoes);
-        vbox.setPadding(new Insets(10));
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        // Layout final da aba: tabela em cima, card embaixo
+        VBox vbox = new VBox(12, tabela, cardFormulario);
+
+        // topo = 0, lados = 16, bottom = 16
+        vbox.setPadding(new Insets(0, 16, 16, 16));
+
+        VBox.setVgrow(tabela, Priority.ALWAYS);
+        tab.setContent(vbox);
 
         tab.setContent(vbox);
         return tab;
     }
 
+        /**
+     * Atualiza os combos de planos na aba de Clientes.
+     * 
+     * Por enquanto deixei vazio só para não dar erro de compilação.
+     * Se você quiser, depois podemos guardar uma referência aos ComboBox
+     * da aba de clientes e, aqui dentro, chamar atualizarComboPlanosAssinatura(...)
+     * e atualizarComboPlanosTreino(...).
+     */
+    private void atualizarCombosClientes() {
+        // TODO: se você quiser que os ComboBox da aba de Clientes
+        // atualizem automaticamente quando criar/editar um plano,
+        // podemos implementar isso depois.
+    }
+
+
+
     // -----------------------------------------------------------
     // ABA SOBRE
     // -----------------------------------------------------------
-    private VBox criarPainelSobre() {
-        Label titulo = new Label("GymSolver - Sistema de Gerenciamento de Academia");
-        titulo.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+    // Aba SOBRE
+    private Tab criarTabSobre() {
+        Tab tab = new Tab("Sobre");
+        tab.setClosable(false);
 
-        Label descricao = new Label(
+        // Título
+        Label lblTitulo = new Label("GymSolver - Sistema de Gerenciamento de Academia");
+        lblTitulo.getStyleClass().add("sobre-title");
+
+        // Texto descritivo
+        Label lblTexto = new Label(
                 "Sistema voltado para a administração de academias, permitindo:\n" +
-                "- Controle de planos de treino e assinatura;\n" +
-                "- Cadastro e acompanhamento de clientes;\n" +
-                "- Gestão de funcionários.\n\n" +
+                "• Controle de planos de treino e assinatura;\n" +
+                "• Cadastro e acompanhamento de clientes;\n" +
+                "• Gestão de funcionários.\n\n" +
                 "Este é um protótipo acadêmico, com dados armazenados em memória (sem banco de dados)."
         );
-        descricao.setWrapText(true);
+        lblTexto.setWrapText(true);
+        lblTexto.getStyleClass().add("sobre-text");
 
-        VBox vbox = new VBox(10, titulo, descricao);
-        vbox.setPadding(new Insets(20));
-        return vbox;
+        // Card com bordas arredondadas (reaproveita a classe .card do CSS)
+        VBox cardSobre = new VBox(10, lblTitulo, lblTexto);
+        cardSobre.getStyleClass().add("card");
+        cardSobre.setMaxWidth(700);          // largura máxima do card
+        cardSobre.setFillWidth(true);
+
+        // Container externo só pra dar margem interna em relação à tela
+        VBox container = new VBox(cardSobre);
+        // topo = 0, direita = 16, baixo = 16, esquerda = 16
+        container.setPadding(new Insets(0, 16, 16, 16));
+        container.setAlignment(Pos.TOP_LEFT);
+
+
+        tab.setContent(container);
+        return tab;
     }
+
 
     // -----------------------------------------------------------
     // UTILITÁRIO DE ALERTA
