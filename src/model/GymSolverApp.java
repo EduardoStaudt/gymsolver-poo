@@ -1,30 +1,25 @@
 package model;
 
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
+import javafx.beans.binding.Bindings;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 /**
- * Aplicação principal da academia GymSolver.
- * Tem:
- *  - Tela de login
- *  - Painel principal com menu lateral + abas
+ * GymSolverApp
+ * Aplicação JavaFX para gerenciamento simples de uma academia.
  */
 public class GymSolverApp extends Application {
 
     // "Banco de dados" em memória
     private final AcademiaRepository repositorio = new AcademiaRepository();
-
-    // Para conseguir trocar as abas a partir do menu lateral
-    private TabPane tabPane;
 
     public static void main(String[] args) {
         launch(args);
@@ -32,201 +27,168 @@ public class GymSolverApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Sempre começa mostrando a tela de login
         mostrarTelaLogin(primaryStage);
     }
 
-    // ============================================================
-    //                      TELA DE LOGIN
-    // ============================================================
-
+    // ------------------------------------------------------------
+    //  TELA DE LOGIN
+    // ------------------------------------------------------------
     private void mostrarTelaLogin(Stage stage) {
-        // Título
-        Label lblTitulo = new Label("GymSolver");
-        lblTitulo.getStyleClass().add("header-title");
+        Label titulo = new Label("GymSolver");
+        titulo.getStyleClass().add("header-title");
 
-        Label lblSub = new Label("Login do sistema");
-        lblSub.getStyleClass().add("header-subtitle");
+        Label subtitulo = new Label("Painel de gerenciamento da academia");
+        subtitulo.getStyleClass().add("header-subtitle");
 
-        // Campos
-        Label lblUsuario = new Label("Usuário:");
+        Label lblUsuario = new Label("Usuário");
         TextField txtUsuario = new TextField();
         txtUsuario.setPromptText("admin");
 
-        Label lblSenha = new Label("Senha:");
+        Label lblSenha = new Label("Senha");
         PasswordField txtSenha = new PasswordField();
         txtSenha.setPromptText("123");
 
-        // Botões
         Button btnEntrar = new Button("Entrar");
         btnEntrar.getStyleClass().add("button-primary");
 
-        Button btnSair = new Button("Sair");
-        btnSair.getStyleClass().add("button-ghost");
-
-        HBox linhaBotoes = new HBox(10, btnSair, btnEntrar);
-        linhaBotoes.setAlignment(Pos.CENTER_RIGHT);
-
-        // Formulário em grid
-        GridPane form = new GridPane();
-        form.setHgap(10);
-        form.setVgap(12);
-        form.add(lblUsuario, 0, 0);
-        form.add(txtUsuario, 1, 0);
-        form.add(lblSenha, 0, 1);
-        form.add(txtSenha, 1, 1);
-        form.add(linhaBotoes, 1, 2);
-
-        // Card central
-        VBox card = new VBox(16, lblTitulo, lblSub, form);
-        card.getStyleClass().add("card");
-        card.setPadding(new Insets(24));
-        card.setMaxWidth(380);
-
-        BorderPane root = new BorderPane(card);
-        BorderPane.setAlignment(card, Pos.CENTER);
-        root.setPadding(new Insets(24));
-
-        Scene cenaLogin = new Scene(root, 520, 340);
-        // Aplica CSS (ajuste o caminho se necessário)
-        try {
-            cenaLogin.getStylesheets().add(
-                    getClass().getResource("/view/dark-theme.css").toExternalForm()
-            );
-        } catch (Exception e) {
-            System.out.println("Não encontrou CSS (dark-theme.css).");
-        }
-
-        stage.setTitle("GymSolver - Login");
-        stage.setScene(cenaLogin);
-        stage.centerOnScreen();
-        stage.show();
-
-        // ===== Ações =====
-
-        btnSair.setOnAction(e -> Platform.exit());
-
         btnEntrar.setOnAction(e -> {
-            String u = txtUsuario.getText().trim();
-            String s = txtSenha.getText().trim();
+            String u = txtUsuario.getText();
+            String s = txtSenha.getText();
 
-            // Validação simples só para exemplo
-            if (u.equals("admin") && s.equals("123")) {
-                abrirPainelPrincipal(stage);
+            if ("admin".equals(u) && "123".equals(s)) {
+                mostrarTelaPrincipal(stage);
             } else {
-                Alert alerta = new Alert(Alert.AlertType.ERROR,
-                        "Usuário ou senha inválidos. Use admin / 123.",
-                        ButtonType.OK);
-                alerta.setHeaderText("Login inválido");
-                alerta.initOwner(stage);
-                alerta.showAndWait();
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Login inválido");
+                alert.setHeaderText("Usuário ou senha incorretos");
+                alert.setContentText("Use usuário: admin   |   senha: 123");
+                alert.showAndWait();
             }
         });
+
+        VBox form = new VBox(10, lblUsuario, txtUsuario, lblSenha, txtSenha, btnEntrar);
+        form.setAlignment(Pos.CENTER_LEFT);
+
+        VBox card = new VBox(16, titulo, subtitulo, form);
+        card.getStyleClass().add("card");
+        card.setMaxWidth(360);
+
+        VBox root = new VBox(card);
+        root.setPadding(new Insets(24));
+        root.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(root, 1200, 700);
+        scene.getStylesheets().add(getClass().getResource("/view/dark-theme.css").toExternalForm());
+
+        stage.setTitle("GymSolver - Login");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    // ============================================================
-    //                   PAINEL PRINCIPAL
-    // ============================================================
-
-    private void abrirPainelPrincipal(Stage stage) {
-
-        // 1) TabPane central
-        tabPane = new TabPane();
+    // ------------------------------------------------------------
+    //  TELA PRINCIPAL
+    // ------------------------------------------------------------
+    private void mostrarTelaPrincipal(Stage stage) {
+        // TabPane com as abas principais
+        TabPane tabPane = new TabPane();
         tabPane.getStyleClass().add("main-tab-pane");
 
-        tabPane.getTabs().setAll(
-                criarTabClientes(),
-                criarTabFuncionarios(),
-                criarTabPlanosTreino(),
-                criarTabPlanosAssinatura(),
-                criarTabSobre()
+        Tab tabClientes           = criarTabClientes();
+        Tab tabFuncionarios       = criarTabFuncionarios();
+        Tab tabPlanosTreino       = criarTabPlanosTreino();
+        Tab tabPlanosAssinatura   = criarTabPlanosAssinatura();
+        Tab tabSobre              = criarTabSobre();   // agora com o dashboard
+
+        tabPane.getTabs().addAll(
+                tabClientes,
+                tabFuncionarios,
+                tabPlanosTreino,
+                tabPlanosAssinatura,
+                tabSobre
         );
 
-        // 2) Sidebar (menu lateral)
-        VBox sidebar = criarSidebar();
-
-        // Layout principal
-        BorderPane root = new BorderPane();
-        root.setLeft(sidebar);
-        root.setCenter(tabPane);
-        root.setPadding(new Insets(16));
-
-        Scene cena = new Scene(root, 1200, 720);
-        try {
-            cena.getStylesheets().add(
-                    getClass().getResource("/view/dark-theme.css").toExternalForm()
-            );
-        } catch (Exception e) {
-            System.out.println("Não encontrou CSS (dark-theme.css).");
-        }
-
-        stage.setTitle("GymSolver - Painel da Academia");
-        stage.setScene(cena);
-        stage.centerOnScreen();
-        stage.show();
-
-        // Deixa Clientes como aba inicial
-        tabPane.getSelectionModel().select(0);
-    }
-
-    // ============================================================
-    //                        SIDEBAR
-    // ============================================================
-
-    private VBox criarSidebar() {
+        // ------------------ Sidebar ------------------
         Label lblMenu = new Label("MENU");
+        lblMenu.getStyleClass().add("sidebar-title");
 
-        ToggleButton btnClientes = new ToggleButton("Clientes");
-        ToggleButton btnFuncionarios = new ToggleButton("Funcionários");
-        ToggleButton btnPlanosTreino = new ToggleButton("Planos de Treino");
-        ToggleButton btnPlanosAssinatura = new ToggleButton("Planos de Assinatura");
-        ToggleButton btnSobre = new ToggleButton("Sobre");
+        ToggleGroup menuGroup = new ToggleGroup();
 
-        // Classes CSS
-        btnClientes.getStyleClass().add("sidebar-button");
-        btnFuncionarios.getStyleClass().add("sidebar-button");
-        btnPlanosTreino.getStyleClass().add("sidebar-button");
-        btnPlanosAssinatura.getStyleClass().add("sidebar-button");
-        btnSobre.getStyleClass().add("sidebar-button");
+        ToggleButton btnClientes = criarBotaoMenu("Clientes", menuGroup);
+        ToggleButton btnFuncionarios = criarBotaoMenu("Funcionários", menuGroup);
+        ToggleButton btnPlanosTreino = criarBotaoMenu("Planos de Treino", menuGroup);
+        ToggleButton btnPlanosAssinatura = criarBotaoMenu("Planos de Assinatura", menuGroup);
+        ToggleButton btnSobre = criarBotaoMenu("Sobre", menuGroup);
 
-        ToggleGroup grupo = new ToggleGroup();
-        btnClientes.setToggleGroup(grupo);
-        btnFuncionarios.setToggleGroup(grupo);
-        btnPlanosTreino.setToggleGroup(grupo);
-        btnPlanosAssinatura.setToggleGroup(grupo);
-        btnSobre.setToggleGroup(grupo);
+        btnClientes.setOnAction(e -> tabPane.getSelectionModel().select(tabClientes));
+        btnFuncionarios.setOnAction(e -> tabPane.getSelectionModel().select(tabFuncionarios));
+        btnPlanosTreino.setOnAction(e -> tabPane.getSelectionModel().select(tabPlanosTreino));
+        btnPlanosAssinatura.setOnAction(e -> tabPane.getSelectionModel().select(tabPlanosAssinatura));
+        btnSobre.setOnAction(e -> tabPane.getSelectionModel().select(tabSobre));
 
         btnClientes.setSelected(true);
+        tabPane.getSelectionModel().select(tabClientes);
 
-        // Quando clicar no menu, muda a aba do TabPane
-        btnClientes.setOnAction(e -> tabPane.getSelectionModel().select(0));
-        btnFuncionarios.setOnAction(e -> tabPane.getSelectionModel().select(1));
-        btnPlanosTreino.setOnAction(e -> tabPane.getSelectionModel().select(2));
-        btnPlanosAssinatura.setOnAction(e -> tabPane.getSelectionModel().select(3));
-        btnSobre.setOnAction(e -> tabPane.getSelectionModel().select(4));
-
-        VBox box = new VBox(12, lblMenu,
+        VBox sidebar = new VBox(12,
+                lblMenu,
                 btnClientes,
                 btnFuncionarios,
                 btnPlanosTreino,
                 btnPlanosAssinatura,
-                btnSobre);
-        box.getStyleClass().add("sidebar");
-        return box;
+                btnSobre
+        );
+        sidebar.getStyleClass().add("sidebar");
+
+        // ------------------ Header ------------------
+        Label logo = new Label("GymSolver");
+        logo.getStyleClass().add("header-title");
+
+        Label lblTopo = new Label("Painel de gerenciamento da academia");
+        lblTopo.getStyleClass().add("header-subtitle");
+
+        Region espacador = new Region();
+        HBox.setHgrow(espacador, Priority.ALWAYS);
+
+        HBox header = new HBox(logo, espacador, lblTopo);
+        header.getStyleClass().add("header-bar");
+
+        // ------------------ Centro (header + abas) ------------------
+        VBox conteudoCentral = new VBox(header, tabPane);
+        conteudoCentral.getStyleClass().add("content-root");
+        VBox.setVgrow(tabPane, Priority.ALWAYS);
+
+        BorderPane root = new BorderPane();
+        root.setLeft(sidebar);
+        root.setCenter(conteudoCentral);
+
+        Scene scene = new Scene(root, 1200, 700);
+        scene.getStylesheets().add(getClass().getResource("/view/dark-theme.css").toExternalForm());
+
+        stage.setTitle("GymSolver - Painel da Academia");
+        stage.setScene(scene);
+        stage.show();
     }
 
-    // ============================================================
-    //                        TAB CLIENTES
-    // ============================================================
+    private ToggleButton criarBotaoMenu(String texto, ToggleGroup grupo) {
+        ToggleButton btn = new ToggleButton(texto);
+        btn.setToggleGroup(grupo);
+        btn.getStyleClass().add("sidebar-button");
+        return btn;
+    }
 
+    // ======================= ABA CLIENTES =======================
     private Tab criarTabClientes() {
         Tab tab = new Tab("Clientes");
         tab.setClosable(false);
 
+        // Lista filtrada para buscar clientes
+        FilteredList<Cliente> clientesFiltrados =
+                new FilteredList<>(repositorio.getClientes(), c -> true);
+
         // Tabela
         TableView<Cliente> tabela = new TableView<>();
         tabela.getStyleClass().add("data-table");
-        tabela.setItems(repositorio.getClientes());
+        tabela.setItems(clientesFiltrados);
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Cliente, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -240,192 +202,216 @@ public class GymSolverApp extends Application {
         TableColumn<Cliente, String> colTelefone = new TableColumn<>("Telefone");
         colTelefone.setCellValueFactory(new PropertyValueFactory<>("telefone"));
 
-        TableColumn<Cliente, String> colPlanoAss = new TableColumn<>("Plano Assinatura");
-        colPlanoAss.setCellValueFactory(c ->
-                new SimpleStringProperty(
-                        c.getValue().getPlanoAssinatura() != null
-                                ? c.getValue().getPlanoAssinatura().getNome()
-                                : ""
-                ));
+        TableColumn<Cliente, PlanoAssinatura> colPlanoAssinatura = new TableColumn<>("Plano Assinatura");
+        colPlanoAssinatura.setCellValueFactory(new PropertyValueFactory<>("planoAssinatura"));
 
-        TableColumn<Cliente, String> colPlanoTreino = new TableColumn<>("Plano Treino");
-        colPlanoTreino.setCellValueFactory(c ->
-                new SimpleStringProperty(
-                        c.getValue().getPlanoTreino() != null
-                                ? c.getValue().getPlanoTreino().getNome()
-                                : ""
-                ));
+        TableColumn<Cliente, PlanoTreino> colPlanoTreino = new TableColumn<>("Plano Treino");
+        colPlanoTreino.setCellValueFactory(new PropertyValueFactory<>("planoTreino"));
 
-        tabela.getColumns().setAll(colId, colNome, colEmail, colTelefone, colPlanoAss, colPlanoTreino);
+        tabela.getColumns().addAll(
+                colId, colNome, colEmail, colTelefone, colPlanoAssinatura, colPlanoTreino
+        );
 
-        // ---------------- Formulário ----------------
+        // ----------------- Barra de busca -----------------
+        TextField txtBusca = new TextField();
+        txtBusca.setPromptText("Buscar cliente por nome ou e-mail...");
 
-        Label lblId = new Label("ID:");
+        txtBusca.textProperty().addListener((obs, old, novo) -> {
+            String filtro = novo == null ? "" : novo.trim().toLowerCase();
+
+            clientesFiltrados.setPredicate(cliente -> {
+                if (filtro.isEmpty()) return true;
+
+                String nome = cliente.getNome() == null ? "" : cliente.getNome().toLowerCase();
+                String email = cliente.getEmail() == null ? "" : cliente.getEmail().toLowerCase();
+
+                return nome.contains(filtro) || email.contains(filtro);
+            });
+        });
+
+        Label lblBusca = new Label("Buscar:");
+        HBox barraBusca = new HBox(8, lblBusca, txtBusca);
+        barraBusca.setAlignment(Pos.CENTER_LEFT);
+        barraBusca.setPadding(new Insets(0, 0, 8, 0));
+
+        // ----------------- Formulário -----------------
         TextField txtId = new TextField();
-        txtId.setEditable(false);
-        txtId.setPromptText("Gerado automaticamente");
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        Label lblNome = new Label("Nome:");
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do cliente");
 
-        Label lblEmail = new Label("E-mail:");
         TextField txtEmail = new TextField();
         txtEmail.setPromptText("E-mail do cliente");
 
-        Label lblTelefone = new Label("Telefone:");
         TextField txtTelefone = new TextField();
         txtTelefone.setPromptText("Telefone do cliente");
 
-        Label lblPlanoAss = new Label("Plano Assinatura:");
-        ComboBox<PlanoAssinatura> cbPlanoAss = new ComboBox<>(repositorio.getPlanosAssinatura());
-        cbPlanoAss.setPromptText("Selecione o plano de assinatura");
+        ComboBox<PlanoAssinatura> cbPlanoAssinatura =
+                new ComboBox<>(repositorio.getPlanosAssinatura());
+        cbPlanoAssinatura.setPromptText("Selecione o plano de assinatura");
 
-        Label lblPlanoTreino = new Label("Plano Treino:");
-        ComboBox<PlanoTreino> cbPlanoTreino = new ComboBox<>(repositorio.getPlanosTreino());
+        ComboBox<PlanoTreino> cbPlanoTreino =
+                new ComboBox<>(repositorio.getPlanosTreino());
         cbPlanoTreino.setPromptText("Selecione o plano de treino");
 
-        // Grid de formulário
-        GridPane form = new GridPane();
-        form.setHgap(12);
-        form.setVgap(10);
-        form.add(lblId, 0, 0);
-        form.add(txtId, 1, 0);
-        form.add(lblNome, 0, 1);
-        form.add(txtNome, 1, 1);
-        form.add(lblEmail, 0, 2);
-        form.add(txtEmail, 1, 2);
-        form.add(lblTelefone, 0, 3);
-        form.add(txtTelefone, 1, 3);
-        form.add(lblPlanoAss, 0, 4);
-        form.add(cbPlanoAss, 1, 4);
-        form.add(lblPlanoTreino, 0, 5);
-        form.add(cbPlanoTreino, 1, 5);
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
 
-        // Botões
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("E-mail:"), 0, 2);
+        formulario.add(txtEmail, 1, 2);
+
+        formulario.add(new Label("Telefone:"), 0, 3);
+        formulario.add(txtTelefone, 1, 3);
+
+        formulario.add(new Label("Plano Assinatura:"), 0, 4);
+        formulario.add(cbPlanoAssinatura, 1, 4);
+
+        formulario.add(new Label("Plano Treino:"), 0, 5);
+        formulario.add(cbPlanoTreino, 1, 5);
+
+        formulario.getStyleClass().add("card");
+
+        // ----------------- Botões -----------------
         Button btnNovo = new Button("Novo");
-        Button btnSalvar = new Button("Salvar");
-        Button btnExcluir = new Button("Excluir");
-        Button btnLimpar = new Button("Limpar");
-
         btnNovo.getStyleClass().add("button-ghost");
+
+        Button btnSalvar = new Button("Salvar");
         btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
         btnExcluir.getStyleClass().add("button-danger");
+        btnExcluir.setDisable(true);
+
+        Button btnLimpar = new Button("Limpar");
         btnLimpar.getStyleClass().add("button-ghost");
 
         HBox botoes = new HBox(12, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
 
-        // Card em volta do formulário
-        VBox cardFormulario = new VBox(16, form, botoes);
+        VBox cardFormulario = new VBox(12, formulario, botoes);
         cardFormulario.getStyleClass().add("card");
 
-        VBox layout = new VBox(16, tabela, cardFormulario);
-        layout.setPadding(new Insets(8, 0, 0, 0));
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
 
-        tab.setContent(layout);
+        // ----------------- Comportamento -----------------
 
-        // --------- Comportamento básico ---------
-
-        // Preenche o formulário ao selecionar na tabela
+        // Quando clicar em uma linha da tabela, preenche o formulário
         tabela.getSelectionModel().selectedItemProperty().addListener((obs, antigo, selecionado) -> {
             if (selecionado != null) {
                 txtId.setText(String.valueOf(selecionado.getId()));
                 txtNome.setText(selecionado.getNome());
                 txtEmail.setText(selecionado.getEmail());
                 txtTelefone.setText(selecionado.getTelefone());
-                cbPlanoAss.getSelectionModel().select(selecionado.getPlanoAssinatura());
-                cbPlanoTreino.getSelectionModel().select(selecionado.getPlanoTreino());
+                cbPlanoAssinatura.setValue(selecionado.getPlanoAssinatura());
+                cbPlanoTreino.setValue(selecionado.getPlanoTreino());
+
+                btnSalvar.setText("Atualizar");
+                btnExcluir.setDisable(false);
             }
         });
 
-        // Novo: gera próximo ID e limpa campos
+        // Botão NOVO: limpa e prepara para cadastro novo
         btnNovo.setOnAction(e -> {
-            int id = repositorio.proximoIdCliente();
-            txtId.setText(String.valueOf(id));
-            txtNome.clear();
-            txtEmail.clear();
-            txtTelefone.clear();
-            cbPlanoAss.getSelectionModel().clearSelection();
-            cbPlanoTreino.getSelectionModel().clearSelection();
             tabela.getSelectionModel().clearSelection();
+            limparFormularioCliente(txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino);
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
         });
 
-        // Salvar (insere ou atualiza)
+        // Botão LIMPAR: igual o Novo, mas sem mudar seleção pela lógica de negócio
+        btnLimpar.setOnAction(e -> {
+            tabela.getSelectionModel().clearSelection();
+            limparFormularioCliente(txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino);
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
+        });
+
+        // Botão SALVAR / ATUALIZAR
         btnSalvar.setOnAction(e -> {
-            try {
-                int id = Integer.parseInt(txtId.getText());
-                String nome = txtNome.getText();
-                String email = txtEmail.getText();
-                String telefone = txtTelefone.getText();
-                PlanoAssinatura pa = cbPlanoAss.getValue();
-                PlanoTreino pt = cbPlanoTreino.getValue();
-
-                if (nome.isEmpty()) {
-                    mostrarAlerta("Dados inválidos", "Informe o nome do cliente.");
-                    return;
-                }
-
-                ObservableList<Cliente> lista = repositorio.getClientes();
-                Cliente existente = lista.stream()
-                        .filter(c -> c.getId() == id)
-                        .findFirst()
-                        .orElse(null);
-
-                if (existente == null) {
-                    Cliente novo = new Cliente(id, nome, email, telefone, pa, pt);
-                    repositorio.salvarCliente(novo);
-                    tabela.getSelectionModel().select(novo);
-                } else {
-                    existente.setNome(nome);
-                    existente.setEmail(email);
-                    existente.setTelefone(telefone);
-                    existente.setPlanoAssinatura(pa);
-                    existente.setPlanoTreino(pt);
-                    tabela.refresh();
-                }
-
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("ID inválido", "Clique em 'Novo' para gerar um ID antes de salvar.");
+            if (!validarCamposCliente(txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino)) {
+                return;
             }
+
+            Cliente selecionado = tabela.getSelectionModel().getSelectedItem();
+
+            if (selecionado == null) {
+                // Novo cliente
+                repositorio.criarCliente(
+                        txtNome.getText().trim(),
+                        txtEmail.getText().trim(),
+                        txtTelefone.getText().trim(),
+                        cbPlanoAssinatura.getValue(),
+                        cbPlanoTreino.getValue()
+                );
+            } else {
+                // Atualizar cliente existente
+                selecionado.setNome(txtNome.getText().trim());
+                selecionado.setEmail(txtEmail.getText().trim());
+                selecionado.setTelefone(txtTelefone.getText().trim());
+                selecionado.setPlanoAssinatura(cbPlanoAssinatura.getValue());
+                selecionado.setPlanoTreino(cbPlanoTreino.getValue());
+                tabela.refresh();
+            }
+
+            tabela.getSelectionModel().clearSelection();
+            limparFormularioCliente(txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino);
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
         });
 
-        // Excluir
+        // Botão EXCLUIR
         btnExcluir.setOnAction(e -> {
             Cliente selecionado = tabela.getSelectionModel().getSelectedItem();
-            if (selecionado != null) {
-                repositorio.removerCliente(selecionado);
-                tabela.getSelectionModel().clearSelection();
-                btnLimpar.fire();
+            if (selecionado == null) {
+                return;
             }
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Excluir cliente");
+            alert.setHeaderText("Tem certeza que deseja excluir este cliente?");
+            alert.setContentText(selecionado.getNome());
+
+            alert.showAndWait().ifPresent(resposta -> {
+                if (resposta == ButtonType.OK) {
+                    repositorio.getClientes().remove(selecionado);
+                    tabela.getSelectionModel().clearSelection();
+                    limparFormularioCliente(txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino);
+                    btnSalvar.setText("Salvar");
+                    btnExcluir.setDisable(true);
+                }
+            });
         });
 
-        // Limpar
-        btnLimpar.setOnAction(e -> {
-            txtId.clear();
-            txtNome.clear();
-            txtEmail.clear();
-            txtTelefone.clear();
-            cbPlanoAss.getSelectionModel().clearSelection();
-            cbPlanoTreino.getSelectionModel().clearSelection();
-            tabela.getSelectionModel().clearSelection();
-        });
-
+        tab.setContent(conteudo);
         return tab;
     }
 
-    // ============================================================
-    //                     TAB FUNCIONÁRIOS
-    // ============================================================
 
+    // ======================= ABA FUNCIONÁRIOS =======================
     private Tab criarTabFuncionarios() {
         Tab tab = new Tab("Funcionários");
         tab.setClosable(false);
 
+        // Lista filtrada para busca
+        FilteredList<Funcionario> funcionariosFiltrados =
+                new FilteredList<>(repositorio.getFuncionarios(), f -> true);
+
+        // Tabela
         TableView<Funcionario> tabela = new TableView<>();
         tabela.getStyleClass().add("data-table");
-        tabela.setItems(repositorio.getFuncionarios());
+        tabela.setItems(funcionariosFiltrados);
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Funcionario, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -439,138 +425,191 @@ public class GymSolverApp extends Application {
         TableColumn<Funcionario, String> colCpf = new TableColumn<>("CPF");
         colCpf.setCellValueFactory(new PropertyValueFactory<>("cpf"));
 
-        tabela.getColumns().setAll(colId, colNome, colCargo, colCpf);
+        tabela.getColumns().addAll(colId, colNome, colCargo, colCpf);
 
-        // Form
-        Label lblId = new Label("ID:");
+        // ---------- Barra de busca ----------
+        TextField txtBusca = new TextField();
+        txtBusca.setPromptText("Buscar funcionário por nome ou CPF...");
+
+        txtBusca.textProperty().addListener((obs, old, novo) -> {
+            String filtro = novo == null ? "" : novo.trim().toLowerCase();
+
+            funcionariosFiltrados.setPredicate(func -> {
+                if (filtro.isEmpty()) return true;
+
+                String nome = func.getNome() == null ? "" : func.getNome().toLowerCase();
+                String cpf = func.getCpf() == null ? "" : func.getCpf().toLowerCase();
+
+                return nome.contains(filtro) || cpf.contains(filtro);
+            });
+        });
+
+        Label lblBusca = new Label("Buscar:");
+        HBox barraBusca = new HBox(8, lblBusca, txtBusca);
+        barraBusca.setAlignment(Pos.CENTER_LEFT);
+        barraBusca.setPadding(new Insets(0, 0, 8, 0));
+
+        // ---------- Formulário ----------
         TextField txtId = new TextField();
-        txtId.setEditable(false);
-        txtId.setPromptText("Gerado automaticamente");
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        Label lblNome = new Label("Nome:");
         TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do funcionário");
 
-        Label lblCargo = new Label("Cargo:");
         TextField txtCargo = new TextField();
+        txtCargo.setPromptText("Cargo (instrutor, recepção, etc.)");
 
-        Label lblCpf = new Label("CPF:");
         TextField txtCpf = new TextField();
+        txtCpf.setPromptText("CPF do funcionário");
 
-        GridPane form = new GridPane();
-        form.setHgap(12);
-        form.setVgap(10);
-        form.add(lblId, 0, 0);
-        form.add(txtId, 1, 0);
-        form.add(lblNome, 0, 1);
-        form.add(txtNome, 1, 1);
-        form.add(lblCargo, 0, 2);
-        form.add(txtCargo, 1, 2);
-        form.add(lblCpf, 0, 3);
-        form.add(txtCpf, 1, 3);
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
 
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("Cargo:"), 0, 2);
+        formulario.add(txtCargo, 1, 2);
+
+        formulario.add(new Label("CPF:"), 0, 3);
+        formulario.add(txtCpf, 1, 3);
+
+        formulario.getStyleClass().add("card");
+
+        // ---------- Botões ----------
         Button btnNovo = new Button("Novo");
-        Button btnSalvar = new Button("Salvar");
-        Button btnExcluir = new Button("Excluir");
-        Button btnLimpar = new Button("Limpar");
-
         btnNovo.getStyleClass().add("button-ghost");
+
+        Button btnSalvar = new Button("Salvar");
         btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
         btnExcluir.getStyleClass().add("button-danger");
+        btnExcluir.setDisable(true);
+
+        Button btnLimpar = new Button("Limpar");
         btnLimpar.getStyleClass().add("button-ghost");
 
         HBox botoes = new HBox(12, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
 
-        VBox card = new VBox(16, form, botoes);
-        card.getStyleClass().add("card");
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
 
-        VBox layout = new VBox(16, tabela, card);
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
 
-        tab.setContent(layout);
+        // ---------- Comportamento ----------
+        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antigo, selecionado) -> {
+            if (selecionado != null) {
+                txtId.setText(String.valueOf(selecionado.getId()));
+                txtNome.setText(selecionado.getNome());
+                txtCargo.setText(selecionado.getCargo());
+                txtCpf.setText(selecionado.getCpf());
 
-        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antes, f) -> {
-            if (f != null) {
-                txtId.setText(String.valueOf(f.getId()));
-                txtNome.setText(f.getNome());
-                txtCargo.setText(f.getCargo());
-                txtCpf.setText(f.getCpf());
+                btnSalvar.setText("Atualizar");
+                btnExcluir.setDisable(false);
             }
         });
 
         btnNovo.setOnAction(e -> {
-            int id = repositorio.proximoIdFuncionario();
-            txtId.setText(String.valueOf(id));
-            txtNome.clear();
-            txtCargo.clear();
-            txtCpf.clear();
             tabela.getSelectionModel().clearSelection();
-        });
-
-        btnSalvar.setOnAction(e -> {
-            try {
-                int id = Integer.parseInt(txtId.getText());
-                String nome = txtNome.getText();
-                String cargo = txtCargo.getText();
-                String cpf = txtCpf.getText();
-
-                if (nome.isEmpty()) {
-                    mostrarAlerta("Dados inválidos", "Informe o nome do funcionário.");
-                    return;
-                }
-
-                ObservableList<Funcionario> lista = repositorio.getFuncionarios();
-                Funcionario existente = lista.stream()
-                        .filter(f -> f.getId() == id)
-                        .findFirst()
-                        .orElse(null);
-
-                if (existente == null) {
-                    Funcionario novo = new Funcionario(id, nome, cargo, cpf);
-                    repositorio.salvarFuncionario(novo);
-                    tabela.getSelectionModel().select(novo);
-                } else {
-                    existente.setNome(nome);
-                    existente.setCargo(cargo);
-                    existente.setCpf(cpf);
-                    tabela.refresh();
-                }
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("ID inválido", "Clique em 'Novo' para gerar um ID antes de salvar.");
-            }
-        });
-
-        btnExcluir.setOnAction(e -> {
-            Funcionario f = tabela.getSelectionModel().getSelectedItem();
-            if (f != null) {
-                repositorio.removerFuncionario(f);
-                tabela.getSelectionModel().clearSelection();
-                btnLimpar.fire();
-            }
-        });
-
-        btnLimpar.setOnAction(e -> {
             txtId.clear();
             txtNome.clear();
             txtCargo.clear();
             txtCpf.clear();
-            tabela.getSelectionModel().clearSelection();
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
         });
 
+        btnLimpar.setOnAction(e -> {
+            tabela.getSelectionModel().clearSelection();
+            txtId.clear();
+            txtNome.clear();
+            txtCargo.clear();
+            txtCpf.clear();
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
+        });
+
+        btnSalvar.setOnAction(e -> {
+            Funcionario selecionado = tabela.getSelectionModel().getSelectedItem();
+
+            if (selecionado == null) {
+                // Novo
+                repositorio.criarFuncionario(
+                        txtNome.getText().trim(),
+                        txtCargo.getText().trim(),
+                        txtCpf.getText().trim()
+                );
+            } else {
+                // Atualizar
+                selecionado.setNome(txtNome.getText().trim());
+                selecionado.setCargo(txtCargo.getText().trim());
+                selecionado.setCpf(txtCpf.getText().trim());
+                tabela.refresh();
+            }
+
+            tabela.getSelectionModel().clearSelection();
+            txtId.clear();
+            txtNome.clear();
+            txtCargo.clear();
+            txtCpf.clear();
+            btnSalvar.setText("Salvar");
+            btnExcluir.setDisable(true);
+        });
+
+        btnExcluir.setOnAction(e -> {
+            Funcionario selecionado = tabela.getSelectionModel().getSelectedItem();
+            if (selecionado == null) return;
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Excluir funcionário");
+            alert.setHeaderText("Tem certeza que deseja excluir este funcionário?");
+            alert.setContentText(selecionado.getNome());
+
+            alert.showAndWait().ifPresent(resposta -> {
+                if (resposta == ButtonType.OK) {
+                    repositorio.getFuncionarios().remove(selecionado);
+                    tabela.getSelectionModel().clearSelection();
+                    txtId.clear();
+                    txtNome.clear();
+                    txtCargo.clear();
+                    txtCpf.clear();
+                    btnSalvar.setText("Salvar");
+                    btnExcluir.setDisable(true);
+                }
+            });
+        });
+
+        tab.setContent(conteudo);
         return tab;
     }
 
-    // ============================================================
-    //                   TAB PLANOS DE TREINO
-    // ============================================================
 
+    // ------------------------------------------------------------
+    //  ABA PLANOS DE TREINO
+    // ------------------------------------------------------------
+    // ======================= ABA PLANOS DE TREINO =======================
     private Tab criarTabPlanosTreino() {
         Tab tab = new Tab("Planos de Treino");
         tab.setClosable(false);
 
+        // Lista filtrada para busca
+        FilteredList<PlanoTreino> planosFiltrados =
+                new FilteredList<>(repositorio.getPlanosTreino(), p -> true);
+
+        // ---------- Tabela ----------
         TableView<PlanoTreino> tabela = new TableView<>();
         tabela.getStyleClass().add("data-table");
-        tabela.setItems(repositorio.getPlanosTreino());
+        tabela.setItems(planosFiltrados);
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<PlanoTreino, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -584,140 +623,105 @@ public class GymSolverApp extends Application {
         TableColumn<PlanoTreino, String> colObjetivo = new TableColumn<>("Objetivo");
         colObjetivo.setCellValueFactory(new PropertyValueFactory<>("objetivo"));
 
-        tabela.getColumns().setAll(colId, colNome, colDescricao, colObjetivo);
+        tabela.getColumns().addAll(colId, colNome, colDescricao, colObjetivo);
 
-        Label lblId = new Label("ID:");
+        // ---------- BARRA DE BUSCA ----------
+        TextField txtBusca = new TextField();
+        txtBusca.setPromptText("Buscar plano de treino por nome ou objetivo...");
+
+        txtBusca.textProperty().addListener((obs, old, novo) -> {
+            String filtro = (novo == null) ? "" : novo.trim().toLowerCase();
+
+            planosFiltrados.setPredicate(plano -> {
+                if (filtro.isEmpty()) return true;
+
+                String nome = plano.getNome() == null ? "" : plano.getNome().toLowerCase();
+                String objetivo = plano.getObjetivo() == null ? "" : plano.getObjetivo().toLowerCase();
+
+                return nome.contains(filtro) || objetivo.contains(filtro);
+            });
+        });
+
+        Label lblBusca = new Label("Buscar:");
+        HBox barraBusca = new HBox(8, lblBusca, txtBusca);
+        barraBusca.setAlignment(Pos.CENTER_LEFT);
+        barraBusca.setPadding(new Insets(0, 0, 8, 0));
+
+        // ---------- FORMULÁRIO ----------
         TextField txtId = new TextField();
-        txtId.setEditable(false);
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        Label lblNome = new Label("Nome:");
         TextField txtNome = new TextField();
         txtNome.setPromptText("Nome do plano de treino");
 
-        Label lblDesc = new Label("Descrição:");
-        TextArea txtDesc = new TextArea();
-        txtDesc.setPromptText("Descrição do plano (ex.: divisão de treinos, volume, etc.)");
-        txtDesc.setPrefRowCount(3);
+        TextField txtDescricao = new TextField();
+        txtDescricao.setPromptText("Descrição do plano (ex.: divisão de treinos, volume, etc.)");
 
-        Label lblObj = new Label("Objetivo:");
-        TextField txtObj = new TextField();
-        txtObj.setPromptText("Objetivo (hipertrofia, emagrecimento, etc.)");
+        TextField txtObjetivo = new TextField();
+        txtObjetivo.setPromptText("Objetivo (hipertrofia, emagrecimento, etc.)");
 
-        GridPane form = new GridPane();
-        form.setHgap(12);
-        form.setVgap(10);
-        form.add(lblId, 0, 0);
-        form.add(txtId, 1, 0);
-        form.add(lblNome, 0, 1);
-        form.add(txtNome, 1, 1);
-        form.add(lblDesc, 0, 2);
-        form.add(txtDesc, 1, 2);
-        form.add(lblObj, 0, 3);
-        form.add(txtObj, 1, 3);
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
 
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("Descrição:"), 0, 2);
+        formulario.add(txtDescricao, 1, 2);
+
+        formulario.add(new Label("Objetivo:"), 0, 3);
+        formulario.add(txtObjetivo, 1, 3);
+
+        // ---------- BOTÕES ----------
         Button btnNovo = new Button("Novo");
-        Button btnSalvar = new Button("Salvar");
-        Button btnExcluir = new Button("Excluir");
-        Button btnLimpar = new Button("Limpar");
-
         btnNovo.getStyleClass().add("button-ghost");
+
+        Button btnSalvar = new Button("Salvar");
         btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
         btnExcluir.getStyleClass().add("button-danger");
+
+        Button btnLimpar = new Button("Limpar");
         btnLimpar.getStyleClass().add("button-ghost");
 
         HBox botoes = new HBox(12, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
 
-        VBox card = new VBox(16, form, botoes);
-        card.getStyleClass().add("card");
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
 
-        VBox layout = new VBox(16, tabela, card);
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
-        tab.setContent(layout);
 
-        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antes, p) -> {
-            if (p != null) {
-                txtId.setText(String.valueOf(p.getId()));
-                txtNome.setText(p.getNome());
-                txtDesc.setText(p.getDescricao());
-                txtObj.setText(p.getObjetivo());
-            }
-        });
-
-        btnNovo.setOnAction(e -> {
-            int id = repositorio.proximoIdPlanoTreino();
-            txtId.setText(String.valueOf(id));
-            txtNome.clear();
-            txtDesc.clear();
-            txtObj.clear();
-            tabela.getSelectionModel().clearSelection();
-        });
-
-        btnSalvar.setOnAction(e -> {
-            try {
-                int id = Integer.parseInt(txtId.getText());
-                String nome = txtNome.getText();
-                String desc = txtDesc.getText();
-                String obj = txtObj.getText();
-
-                if (nome.isEmpty()) {
-                    mostrarAlerta("Dados inválidos", "Informe o nome do plano de treino.");
-                    return;
-                }
-
-                ObservableList<PlanoTreino> lista = repositorio.getPlanosTreino();
-                PlanoTreino existente = lista.stream()
-                        .filter(p -> p.getId() == id)
-                        .findFirst()
-                        .orElse(null);
-
-                if (existente == null) {
-                    PlanoTreino novo = new PlanoTreino(id, nome, desc, obj);
-                    repositorio.salvarPlanoTreino(novo);
-                    tabela.getSelectionModel().select(novo);
-                } else {
-                    existente.setNome(nome);
-                    existente.setDescricao(desc);
-                    existente.setObjetivo(obj);
-                    tabela.refresh();
-                }
-
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("ID inválido", "Clique em 'Novo' para gerar um ID antes de salvar.");
-            }
-        });
-
-        btnExcluir.setOnAction(e -> {
-            PlanoTreino p = tabela.getSelectionModel().getSelectedItem();
-            if (p != null) {
-                repositorio.removerPlanoTreino(p);
-                tabela.getSelectionModel().clearSelection();
-                btnLimpar.fire();
-            }
-        });
-
-        btnLimpar.setOnAction(e -> {
-            txtId.clear();
-            txtNome.clear();
-            txtDesc.clear();
-            txtObj.clear();
-            tabela.getSelectionModel().clearSelection();
-        });
-
+        tab.setContent(conteudo);
         return tab;
     }
 
-    // ============================================================
-    //                 TAB PLANOS DE ASSINATURA
-    // ============================================================
 
+    // ------------------------------------------------------------
+    //  ABA PLANOS DE ASSINATURA
+    // ------------------------------------------------------------
+    // ======================= ABA PLANOS DE ASSINATURA =======================
     private Tab criarTabPlanosAssinatura() {
         Tab tab = new Tab("Planos de Assinatura");
         tab.setClosable(false);
 
+        // Lista filtrada para busca
+        FilteredList<PlanoAssinatura> assinaturasFiltradas =
+                new FilteredList<>(repositorio.getPlanosAssinatura(), p -> true);
+
+        // ---------- Tabela ----------
         TableView<PlanoAssinatura> tabela = new TableView<>();
         tabela.getStyleClass().add("data-table");
-        tabela.setItems(repositorio.getPlanosAssinatura());
+        tabela.setItems(assinaturasFiltradas);
+        tabela.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<PlanoAssinatura, Integer> colId = new TableColumn<>("ID");
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -725,169 +729,237 @@ public class GymSolverApp extends Application {
         TableColumn<PlanoAssinatura, String> colNome = new TableColumn<>("Nome");
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
 
-        TableColumn<PlanoAssinatura, Double> colValor = new TableColumn<>("Valor mensal (R$)");
-        colValor.setCellValueFactory(new PropertyValueFactory<>("valorMensal"));
+        TableColumn<PlanoAssinatura, Double> colValorMensal = new TableColumn<>("Valor mensal (R$)");
+        colValorMensal.setCellValueFactory(new PropertyValueFactory<>("valorMensal"));
 
         TableColumn<PlanoAssinatura, Integer> colDuracao = new TableColumn<>("Duração (meses)");
         colDuracao.setCellValueFactory(new PropertyValueFactory<>("duracaoMeses"));
 
-        tabela.getColumns().setAll(colId, colNome, colValor, colDuracao);
+        tabela.getColumns().addAll(colId, colNome, colValorMensal, colDuracao);
 
-        Label lblId = new Label("ID:");
+        // ---------- BARRA DE BUSCA ----------
+        TextField txtBusca = new TextField();
+        txtBusca.setPromptText("Buscar plano por nome, valor ou duração...");
+
+        txtBusca.textProperty().addListener((obs, old, novo) -> {
+            String filtro = (novo == null) ? "" : novo.trim().toLowerCase();
+
+            assinaturasFiltradas.setPredicate(plano -> {
+                if (filtro.isEmpty()) return true;
+
+                String nome = plano.getNome() == null ? "" : plano.getNome().toLowerCase();
+                String valor = String.valueOf(plano.getValorMensal()).toLowerCase();
+                String duracao = String.valueOf(plano.getDuracaoMeses()).toLowerCase();
+
+                return nome.contains(filtro) || valor.contains(filtro) || duracao.contains(filtro);
+            });
+        });
+
+        Label lblBusca = new Label("Buscar:");
+        HBox barraBusca = new HBox(8, lblBusca, txtBusca);
+        barraBusca.setAlignment(Pos.CENTER_LEFT);
+        barraBusca.setPadding(new Insets(0, 0, 8, 0));
+
+        // ---------- FORMULÁRIO ----------
         TextField txtId = new TextField();
-        txtId.setEditable(false);
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        Label lblNome = new Label("Nome:");
         TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do plano");
 
-        Label lblValor = new Label("Valor mensal (R$):");
-        TextField txtValor = new TextField();
+        TextField txtValorMensal = new TextField();
+        txtValorMensal.setPromptText("Valor mensal (R$)");
 
-        Label lblDuracao = new Label("Duração (meses):");
         TextField txtDuracao = new TextField();
+        txtDuracao.setPromptText("Duração em meses");
 
-        GridPane form = new GridPane();
-        form.setHgap(12);
-        form.setVgap(10);
-        form.add(lblId, 0, 0);
-        form.add(txtId, 1, 0);
-        form.add(lblNome, 0, 1);
-        form.add(txtNome, 1, 1);
-        form.add(lblValor, 0, 2);
-        form.add(txtValor, 1, 2);
-        form.add(lblDuracao, 0, 3);
-        form.add(txtDuracao, 1, 3);
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
 
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("Valor mensal:"), 0, 2);
+        formulario.add(txtValorMensal, 1, 2);
+
+        formulario.add(new Label("Duração (meses):"), 0, 3);
+        formulario.add(txtDuracao, 1, 3);
+
+        // ---------- BOTÕES ----------
         Button btnNovo = new Button("Novo");
-        Button btnSalvar = new Button("Salvar");
-        Button btnExcluir = new Button("Excluir");
-        Button btnLimpar = new Button("Limpar");
-
         btnNovo.getStyleClass().add("button-ghost");
+
+        Button btnSalvar = new Button("Salvar");
         btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
         btnExcluir.getStyleClass().add("button-danger");
+
+        Button btnLimpar = new Button("Limpar");
         btnLimpar.getStyleClass().add("button-ghost");
 
         HBox botoes = new HBox(12, btnNovo, btnSalvar, btnExcluir, btnLimpar);
         botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
 
-        VBox card = new VBox(16, form, botoes);
-        card.getStyleClass().add("card");
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
 
-        VBox layout = new VBox(16, tabela, card);
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
-        tab.setContent(layout);
 
-        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antes, p) -> {
-            if (p != null) {
-                txtId.setText(String.valueOf(p.getId()));
-                txtNome.setText(p.getNome());
-                txtValor.setText(String.valueOf(p.getValorMensal()));
-                txtDuracao.setText(String.valueOf(p.getDuracaoMeses()));
-            }
-        });
-
-        btnNovo.setOnAction(e -> {
-            int id = repositorio.proximoIdPlanoAssinatura();
-            txtId.setText(String.valueOf(id));
-            txtNome.clear();
-            txtValor.clear();
-            txtDuracao.clear();
-            tabela.getSelectionModel().clearSelection();
-        });
-
-        btnSalvar.setOnAction(e -> {
-            try {
-                int id = Integer.parseInt(txtId.getText());
-                String nome = txtNome.getText();
-                double valor = Double.parseDouble(txtValor.getText().replace(",", "."));
-                int duracao = Integer.parseInt(txtDuracao.getText());
-
-                if (nome.isEmpty()) {
-                    mostrarAlerta("Dados inválidos", "Informe o nome do plano de assinatura.");
-                    return;
-                }
-
-                ObservableList<PlanoAssinatura> lista = repositorio.getPlanosAssinatura();
-                PlanoAssinatura existente = lista.stream()
-                        .filter(p -> p.getId() == id)
-                        .findFirst()
-                        .orElse(null);
-
-                if (existente == null) {
-                    PlanoAssinatura novo = new PlanoAssinatura(id, nome, valor, duracao);
-                    repositorio.salvarPlanoAssinatura(novo);
-                    tabela.getSelectionModel().select(novo);
-                } else {
-                    existente.setNome(nome);
-                    existente.setValorMensal(valor);
-                    existente.setDuracaoMeses(duracao);
-                    tabela.refresh();
-                }
-            } catch (NumberFormatException ex) {
-                mostrarAlerta("Dados inválidos", "Verifique valor e duração (números).");
-            }
-        });
-
-        btnExcluir.setOnAction(e -> {
-            PlanoAssinatura p = tabela.getSelectionModel().getSelectedItem();
-            if (p != null) {
-                repositorio.removerPlanoAssinatura(p);
-                tabela.getSelectionModel().clearSelection();
-                btnLimpar.fire();
-            }
-        });
-
-        btnLimpar.setOnAction(e -> {
-            txtId.clear();
-            txtNome.clear();
-            txtValor.clear();
-            txtDuracao.clear();
-            tabela.getSelectionModel().clearSelection();
-        });
-
+        tab.setContent(conteudo);
         return tab;
     }
 
-    // ============================================================
-    //                          TAB SOBRE
-    // ============================================================
 
+    // ------------------------------------------------------------
+    //  ABA SOBRE (Dashboard + descrição)
+    // ------------------------------------------------------------
     private Tab criarTabSobre() {
         Tab tab = new Tab("Sobre");
         tab.setClosable(false);
 
+        // ---------- Cards do "dashboard" ----------
+        Label lblClientesValor = new Label();
+        lblClientesValor.getStyleClass().add("metric-value");
+        lblClientesValor.textProperty().bind(
+                Bindings.size(repositorio.getClientes()).asString()
+        );
+        Label lblClientesTitulo = new Label("Clientes cadastrados");
+        lblClientesTitulo.getStyleClass().add("metric-label");
+        VBox cardClientes = new VBox(4, lblClientesValor, lblClientesTitulo);
+        cardClientes.getStyleClass().addAll("card", "dashboard-card");
+
+        Label lblFuncValor = new Label();
+        lblFuncValor.getStyleClass().add("metric-value");
+        lblFuncValor.textProperty().bind(
+                Bindings.size(repositorio.getFuncionarios()).asString()
+        );
+        Label lblFuncTitulo = new Label("Funcionários");
+        lblFuncTitulo.getStyleClass().add("metric-label");
+        VBox cardFuncionarios = new VBox(4, lblFuncValor, lblFuncTitulo);
+        cardFuncionarios.getStyleClass().addAll("card", "dashboard-card");
+
+        Label lblTreinoValor = new Label();
+        lblTreinoValor.getStyleClass().add("metric-value");
+        lblTreinoValor.textProperty().bind(
+                Bindings.size(repositorio.getPlanosTreino()).asString()
+        );
+        Label lblTreinoTitulo = new Label("Planos de treino");
+        lblTreinoTitulo.getStyleClass().add("metric-label");
+        VBox cardTreino = new VBox(4, lblTreinoValor, lblTreinoTitulo);
+        cardTreino.getStyleClass().addAll("card", "dashboard-card");
+
+        Label lblAssinValor = new Label();
+        lblAssinValor.getStyleClass().add("metric-value");
+        lblAssinValor.textProperty().bind(
+                Bindings.size(repositorio.getPlanosAssinatura()).asString()
+        );
+        Label lblAssinTitulo = new Label("Planos de assinatura");
+        lblAssinTitulo.getStyleClass().add("metric-label");
+        VBox cardAssin = new VBox(4, lblAssinValor, lblAssinTitulo);
+        cardAssin.getStyleClass().addAll("card", "dashboard-card");
+
+        HBox linhaCards = new HBox(16, cardClientes, cardFuncionarios, cardTreino, cardAssin);
+        linhaCards.setAlignment(Pos.TOP_LEFT);
+
+        // ---------- Texto de descrição ----------
         Label titulo = new Label("GymSolver - Sistema de Gerenciamento de Academia");
         titulo.getStyleClass().add("sobre-title");
 
-        Label texto = new Label(
-                "Sistema voltado para a administração de academias, permitindo:\n" +
-                        "- Controle de planos de treino e assinatura;\n" +
-                        "- Cadastro e acompanhamento de clientes;\n" +
-                        "- Gestão de funcionários.\n\n" +
-                        "Este é um protótipo acadêmico, com dados armazenados em memória (sem banco de dados)."
+
+        Label p1 = new Label("Sistema voltado para a administração de academias, permitindo:");
+        p1.getStyleClass().add("sobre-text");
+
+        Label p2 = new Label("- Controle de planos de treino e assinatura;\n" +
+                            "- Cadastro e acompanhamento de clientes;\n" +
+                            "- Gestão de funcionários."
         );
-        texto.setWrapText(true);
+        p2.getStyleClass().add("sobre-text");
 
-        VBox conteudo = new VBox(12, titulo, texto);
-        conteudo.getStyleClass().add("card");
-        conteudo.setMaxWidth(800);
+        Label p3 = new Label("Este é um protótipo acadêmico com dados armazenados em memória (sem banco de dados).");
+        p3.getStyleClass().add("sobre-text");
 
-        BorderPane root = new BorderPane(conteudo);
-        BorderPane.setAlignment(conteudo, Pos.TOP_LEFT);
-        root.setPadding(new Insets(16));
+        VBox texto = new VBox(6, titulo, p1, p2, p3);
+
+        VBox cardSobre = new VBox(16, linhaCards, texto);
+        cardSobre.getStyleClass().add("card");
+
+        VBox root = new VBox(16, cardSobre);
+        root.setPadding(new Insets(24));
 
         tab.setContent(root);
         return tab;
     }
 
-    // ============================================================
-    //                      MÉTODO ÚTIL
-    // ============================================================
+    // ======================= Helpers Clientes =======================
 
-    private void mostrarAlerta(String titulo, String msg) {
-        Alert a = new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK);
-        a.setHeaderText(titulo);
-        a.showAndWait();
+// Validação dos campos de cliente
+    private boolean validarCamposCliente(
+            TextField txtNome,
+            TextField txtEmail,
+            TextField txtTelefone,
+            ComboBox<PlanoAssinatura> cbPlanoAssinatura,
+            ComboBox<PlanoTreino> cbPlanoTreino) {
+
+        StringBuilder erros = new StringBuilder();
+
+        if (txtNome.getText().trim().isEmpty()) {
+            erros.append("- Informe o nome do cliente.\n");
+        }
+
+        String email = txtEmail.getText().trim();
+        if (email.isEmpty()) {
+            erros.append("- Informe o e-mail do cliente.\n");
+        } else if (!email.contains("@")) {
+            erros.append("- Informe um e-mail válido.\n");
+        }
+
+        if (txtTelefone.getText().trim().isEmpty()) {
+            erros.append("- Informe o telefone do cliente.\n");
+        }
+
+        if (cbPlanoAssinatura.getValue() == null) {
+            erros.append("- Selecione um plano de assinatura.\n");
+        }
+
+        if (cbPlanoTreino.getValue() == null) {
+            erros.append("- Selecione um plano de treino.\n");
+        }
+
+        if (erros.length() > 0) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Dados inválidos");
+            alert.setHeaderText("Não foi possível salvar o cliente.");
+            alert.setContentText(erros.toString());
+            alert.showAndWait();
+            return false;
+        }
+
+        return true;
     }
+
+    // Limpar formulário de cliente
+    private void limparFormularioCliente(
+            TextField txtId,
+            TextField txtNome,
+            TextField txtEmail,
+            TextField txtTelefone,
+            ComboBox<PlanoAssinatura> cbPlanoAssinatura,
+            ComboBox<PlanoTreino> cbPlanoTreino) {
+
+        txtId.clear();
+        txtNome.clear();
+        txtEmail.clear();
+        txtTelefone.clear();
+        cbPlanoAssinatura.getSelectionModel().clearSelection();
+        cbPlanoTreino.getSelectionModel().clearSelection();
+    }
+
 }

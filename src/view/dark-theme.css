@@ -155,13 +155,13 @@
 }
 
 .sobre-title {
-    -fx-font-size: 26px;      /* antes 20 */
+    -fx-font-size: 28px;      /* antes 20 */
     -fx-font-weight: 700;
     -fx-text-fill: #f9fafb;
 }
 
 .sobre-text {
-    -fx-font-size: 18px;      /* antes 13 */
+    -fx-font-size: 20px;      /* antes 13 */
     -fx-text-fill: #d1d5db;
     -fx-line-spacing: 4;
 }
@@ -355,4 +355,28 @@
 
 .button-ghost:hover {
     -fx-background-color: #1f2933;
+}
+
+/* ---------- Dashboard ---------- */
+
+.dashboard-card {
+    -fx-pref-width: 220;
+    -fx-padding: 16;
+}
+
+.metric-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f9fafb;
+}
+
+.metric-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #9ca3af;
+}
+
+/* ---------- Campo de busca ---------- */
+
+.search-field {
+    -fx-pref-width: 260;
 }

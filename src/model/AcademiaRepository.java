@@ -9,10 +9,28 @@ import javafx.collections.ObservableList;
  */
 public class AcademiaRepository {
 
-    private final ObservableList<Cliente> clientes =
-            FXCollections.observableArrayList();
+    // lista observável de funcionários
+    private ObservableList<Funcionario> funcionarios = FXCollections.observableArrayList();
 
-    private final ObservableList<Funcionario> funcionarios =
+    // contador de IDs de funcionário
+    private int proximoIdFuncionario = 1;
+
+    public ObservableList<Funcionario> getFuncionarios() {
+        return funcionarios;
+    }
+
+
+    // ================= FUNCIONÁRIOS =================
+
+    public Funcionario criarFuncionario(String nome, String cargo, String cpf) {
+        int id = proximoIdFuncionario++;               // gera ID sequencial
+        Funcionario funcionario = new Funcionario(id, nome, cargo, cpf);
+        funcionarios.add(funcionario);                 // adiciona na lista observável
+        return funcionario;
+    }
+
+
+    private final ObservableList<Cliente> clientes =
             FXCollections.observableArrayList();
 
     private final ObservableList<PlanoTreino> planosTreino =
@@ -68,10 +86,6 @@ public class AcademiaRepository {
 
     public ObservableList<Cliente> getClientes() {
         return clientes;
-    }
-
-    public ObservableList<Funcionario> getFuncionarios() {
-        return funcionarios;
     }
 
     public ObservableList<PlanoTreino> getPlanosTreino() {
@@ -173,4 +187,35 @@ public class AcademiaRepository {
     public void removerPlanoAssinatura(PlanoAssinatura p) {
         planosAssinatura.remove(p);
     }
+    // ============================================================
+//  CRUD SIMPLES – CLIENTE
+// ============================================================
+   // Cria um novo cliente, gera um ID e adiciona na lista
+    public Cliente criarCliente(String nome,
+                                String email,
+                                String telefone,
+                                PlanoAssinatura planoAssinatura,
+                                PlanoTreino planoTreino) {
+
+        // Gera um novo ID com base no maior ID atual
+        int novoId = clientes.isEmpty()
+                ? 1
+                : clientes.stream()
+                        .mapToInt(Cliente::getId)
+                        .max()
+                        .orElse(0) + 1;
+
+        Cliente cliente = new Cliente(
+                novoId,
+                nome,
+                email,
+                telefone,
+                planoAssinatura,
+                planoTreino
+        );
+
+        clientes.add(cliente);
+        return cliente;
+    }
+
 }
