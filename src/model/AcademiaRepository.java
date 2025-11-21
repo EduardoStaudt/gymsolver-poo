@@ -1,84 +1,70 @@
 package model;
 
-// Essa classe é o "banco de dados" em memória da academia.
-// Ela guarda listas de Clientes, Funcionários, Planos de Treino e Planos de Assinatura,
-// e cuida também de gerar IDs automáticos.
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * "Banco de dados" em memória da academia.
+ * Guarda listas de clientes, funcionários, planos de treino e planos de assinatura.
+ */
 public class AcademiaRepository {
 
-    // Listas observáveis (funcionam bem com TableView do JavaFX)
-    private ObservableList<Cliente> clientes = FXCollections.observableArrayList();
-    private ObservableList<Funcionario> funcionarios = FXCollections.observableArrayList();
-    private ObservableList<PlanoTreino> planosTreino = FXCollections.observableArrayList();
-    private ObservableList<PlanoAssinatura> planosAssinatura = FXCollections.observableArrayList();
+    private final ObservableList<Cliente> clientes =
+            FXCollections.observableArrayList();
 
-    // Contadores simples de ID
-    private int proximoIdCliente = 1;
-    private int proximoIdFuncionario = 1;
-    private int proximoIdPlanoTreino = 1;
-    private int proximoIdPlanoAssinatura = 1;
+    private final ObservableList<Funcionario> funcionarios =
+            FXCollections.observableArrayList();
+
+    private final ObservableList<PlanoTreino> planosTreino =
+            FXCollections.observableArrayList();
+
+    private final ObservableList<PlanoAssinatura> planosAssinatura =
+            FXCollections.observableArrayList();
 
     public AcademiaRepository() {
-        // Aqui eu coloco alguns dados de exemplo, só pra não ficar tudo vazio
-        PlanoAssinatura planoMensal = new PlanoAssinatura(
-                gerarProximoIdPlanoAssinatura(),
-                "Mensal",
-                99.90,
-                1
-        );
+        // ---- Planos de assinatura de exemplo ----
+        PlanoAssinatura mensal = new PlanoAssinatura(1, "Mensal", 99.90, 1);
+        PlanoAssinatura trimestral = new PlanoAssinatura(2, "Trimestral", 249.90, 3);
 
-        PlanoAssinatura planoTrimestral = new PlanoAssinatura(
-                gerarProximoIdPlanoAssinatura(),
-                "Trimestral",
-                249.90,
-                3
-        );
+        planosAssinatura.addAll(mensal, trimestral);
 
-        planosAssinatura.addAll(planoMensal, planoTrimestral);
-
-        PlanoTreino treinoIniciante = new PlanoTreino(
-                gerarProximoIdPlanoTreino(),
+        // ---- Planos de treino de exemplo ----
+        PlanoTreino iniciante = new PlanoTreino(
+                1,
                 "Iniciante",
                 "Treino básico 3x por semana",
                 "Adaptação"
         );
 
-        PlanoTreino treinoHipertrofia = new PlanoTreino(
-                gerarProximoIdPlanoTreino(),
+        PlanoTreino hipertrofia = new PlanoTreino(
+                2,
                 "Hipertrofia",
                 "Treino pesado 5x por semana",
                 "Hipertrofia"
         );
 
-        planosTreino.addAll(treinoIniciante, treinoHipertrofia);
+        planosTreino.addAll(iniciante, hipertrofia);
 
-        Funcionario instrutor = new Funcionario(
-                gerarProximoIdFuncionario(),
+        // ---- Funcionário de exemplo ----
+        funcionarios.add(new Funcionario(
+                1,
                 "João Instrutor",
                 "Instrutor",
-                "111.222.333-44"
-        );
+                "123.456.789-00"
+        ));
 
-        funcionarios.add(instrutor);
-
-        Cliente clienteExemplo = new Cliente(
-                gerarProximoIdCliente(),
+        // ---- Cliente de exemplo (liga tudo) ----
+        clientes.add(new Cliente(
+                1,
                 "Maria Aluna",
                 "maria@exemplo.com",
                 "(45) 99999-9999",
-                planoMensal.getNome(),
-                treinoIniciante.getNome()
-        );
-
-        clientes.add(clienteExemplo);
+                mensal,
+                iniciante
+        ));
     }
 
-    // ------------------------------
-    // GETTERS das listas
-    // ------------------------------
+    // ================== LISTAS (TableView / ComboBox) ==================
 
     public ObservableList<Cliente> getClientes() {
         return clientes;
@@ -96,64 +82,95 @@ public class AcademiaRepository {
         return planosAssinatura;
     }
 
-    // ------------------------------
-    // Geração de IDs
-    // ------------------------------
+    // ================== PRÓXIMOS IDs ==================
+    // Versão com "Id" (provavelmente o que o GymSolverApp usa)
 
-    public int gerarProximoIdCliente() {
-        return proximoIdCliente++;
+    public int proximoIdCliente() {
+        return clientes.stream()
+                .mapToInt(Cliente::getId)
+                .max()
+                .orElse(0) + 1;
     }
 
-    public int gerarProximoIdFuncionario() {
-        return proximoIdFuncionario++;
+    public int proximoIdFuncionario() {
+        return funcionarios.stream()
+                .mapToInt(Funcionario::getId)
+                .max()
+                .orElse(0) + 1;
     }
 
-    public int gerarProximoIdPlanoTreino() {
-        return proximoIdPlanoTreino++;
+    public int proximoIdPlanoTreino() {
+        return planosTreino.stream()
+                .mapToInt(PlanoTreino::getId)
+                .max()
+                .orElse(0) + 1;
     }
 
-    public int gerarProximoIdPlanoAssinatura() {
-        return proximoIdPlanoAssinatura++;
+    public int proximoIdPlanoAssinatura() {
+        return planosAssinatura.stream()
+                .mapToInt(PlanoAssinatura::getId)
+                .max()
+                .orElse(0) + 1;
     }
 
-    // ------------------------------
-    // Métodos de busca simples
-    // ------------------------------
+    // Versão com "l" (proximol...), só pra garantir compatibilidade
+    // Se não estiver usando, não tem problema, mas assim nada quebra.
 
-    public Cliente buscarClientePorId(int id) {
-        for (Cliente c : clientes) {
-            if (c.getId() == id) {
-                return c;
-            }
+    public int proximolCliente() {
+        return proximoIdCliente();
+    }
+
+    public int proximolFuncionario() {
+        return proximoIdFuncionario();
+    }
+
+    public int proximolPlanoTreino() {
+        return proximoIdPlanoTreino();
+    }
+
+    public int proximolPlanoAssinatura() {
+        return proximoIdPlanoAssinatura();
+    }
+
+    // ================== CRUD SIMPLES ==================
+
+    public void salvarCliente(Cliente c) {
+        if (!clientes.contains(c)) {
+            clientes.add(c);
         }
-        return null;
     }
 
-    public Funcionario buscarFuncionarioPorId(int id) {
-        for (Funcionario f : funcionarios) {
-            if (f.getId() == id) {
-                return f;
-            }
-        }
-        return null;
+    public void removerCliente(Cliente c) {
+        clientes.remove(c);
     }
 
-    public PlanoTreino buscarPlanoTreinoPorId(int id) {
-        for (PlanoTreino p : planosTreino) {
-            if (p.getId() == id) {
-                return p;
-            }
+    public void salvarFuncionario(Funcionario f) {
+        if (!funcionarios.contains(f)) {
+            funcionarios.add(f);
         }
-        return null;
     }
 
-    public PlanoAssinatura buscarPlanoAssinaturaPorId(int id) {
-        for (PlanoAssinatura p : planosAssinatura) {
-            if (p.getId() == id) {
-                return p;
-            }
+    public void removerFuncionario(Funcionario f) {
+        funcionarios.remove(f);
+    }
+
+    public void salvarPlanoTreino(PlanoTreino p) {
+        if (!planosTreino.contains(p)) {
+            planosTreino.add(p);
         }
-        return null;
+    }
+
+    public void removerPlanoTreino(PlanoTreino p) {
+        planosTreino.remove(p);
+    }
+
+    public void salvarPlanoAssinatura(PlanoAssinatura p) {
+        if (!planosAssinatura.contains(p)) {
+            planosAssinatura.add(p);
+        }
+    }
+
+    public void removerPlanoAssinatura(PlanoAssinatura p) {
+        planosAssinatura.remove(p);
     }
 }
-

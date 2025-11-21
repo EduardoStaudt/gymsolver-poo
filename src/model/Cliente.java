@@ -1,18 +1,29 @@
 package model;
 
-// Cliente.java
-// Representa um cliente da academia.
-
+/**
+ * Representa um cliente da academia.
+ * Agora o cliente guarda diretamente o objeto PlanoAssinatura e PlanoTreino,
+ * não só o nome em String. Isso facilita mostrar os dados e mudar depois.
+ */
 public class Cliente {
 
     private int id;
     private String nome;
     private String email;
     private String telefone;
-    private String planoAssinatura; // aqui guardamos apenas o nome do plano
-    private String planoTreino;     // aqui guardamos apenas o nome do plano de treino
 
-    public Cliente(int id, String nome, String email, String telefone, String planoAssinatura, String planoTreino) {
+    private PlanoAssinatura planoAssinatura;
+    private PlanoTreino planoTreino;
+
+    public Cliente() {
+    }
+
+    public Cliente(int id,
+                   String nome,
+                   String email,
+                   String telefone,
+                   PlanoAssinatura planoAssinatura,
+                   PlanoTreino planoTreino) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -21,7 +32,7 @@ public class Cliente {
         this.planoTreino = planoTreino;
     }
 
-    // Getters e setters simples (TableView usa os getters via reflection)
+    // ========== GETTERS / SETTERS ==========
 
     public int getId() {
         return id;
@@ -55,22 +66,23 @@ public class Cliente {
         this.telefone = telefone;
     }
 
-    public String getPlanoAssinatura() {
+    public PlanoAssinatura getPlanoAssinatura() {
         return planoAssinatura;
     }
 
-    public void setPlanoAssinatura(String planoAssinatura) {
+    public void setPlanoAssinatura(PlanoAssinatura planoAssinatura) {
         this.planoAssinatura = planoAssinatura;
     }
 
-    public String getPlanoTreino() {
+    public PlanoTreino getPlanoTreino() {
         return planoTreino;
     }
 
-    public void setPlanoTreino(String planoTreino) {
+    public void setPlanoTreino(PlanoTreino planoTreino) {
         this.planoTreino = planoTreino;
     }
 
+    // usado em ComboBox / debug
     @Override
     public String toString() {
         return nome;

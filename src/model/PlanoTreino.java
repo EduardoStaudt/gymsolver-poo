@@ -1,14 +1,17 @@
 package model;
 
-// PlanoTreino.java
-// Representa um plano de treino oferecido pela academia.
-
+/**
+ * Plano de treino (Iniciante, Hipertrofia, etc.).
+ */
 public class PlanoTreino {
 
     private int id;
     private String nome;
     private String descricao;
     private String objetivo;
+
+    public PlanoTreino() {
+    }
 
     public PlanoTreino(int id, String nome, String descricao, String objetivo) {
         this.id = id;
@@ -54,4 +57,3 @@ public class PlanoTreino {
         return nome;
     }
 }
-

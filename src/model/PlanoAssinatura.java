@@ -1,14 +1,17 @@
 package model;
 
-// PlanoAssinatura.java
-// Representa um plano de assinatura (mensal, trimestral, anual etc.).
-
+/**
+ * Plano de assinatura (mensal, trimestral, etc.).
+ */
 public class PlanoAssinatura {
 
     private int id;
     private String nome;
     private double valorMensal;
     private int duracaoMeses;
+
+    public PlanoAssinatura() {
+    }
 
     public PlanoAssinatura(int id, String nome, double valorMensal, int duracaoMeses) {
         this.id = id;
@@ -51,6 +54,7 @@ public class PlanoAssinatura {
 
     @Override
     public String toString() {
+        // isso que aparece nas ComboBox
         return nome;
     }
 }
