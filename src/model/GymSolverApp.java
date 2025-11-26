@@ -22,7 +22,7 @@ public class GymSolverApp extends Application {
     private final AcademiaRepository repositorio = new AcademiaRepository();
 
     public static void main(String[] args) {
-        launch(args);
+        launch(args); 
     }
 
     @Override
