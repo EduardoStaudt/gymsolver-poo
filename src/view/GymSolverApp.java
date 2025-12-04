@@ -24,6 +24,7 @@ import javafx.stage.Stage;
  */
 public class GymSolverApp extends Application {
 
+    private static final String ADMIN_PASSWORD = "321";
     private GymController controller;
 
     public static void main(String[] args) {
@@ -465,15 +466,115 @@ public class GymSolverApp extends Application {
         barraBusca.setAlignment(Pos.CENTER_LEFT);
         barraBusca.setPadding(new Insets(0, 0, 8, 0));
 
-        // Formulário (simplificado para demonstração)
-        Label lblInfo = new Label("Funcionalidade de CRUD para Planos de Treino em desenvolvimento...");
-        lblInfo.getStyleClass().add("sobre-text");
+        // Formulário
+        TextField txtId = new TextField();
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        VBox cardInfo = new VBox(16, lblInfo);
-        cardInfo.getStyleClass().add("card");
+        TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do plano");
 
-        VBox conteudo = new VBox(16, barraBusca, tabela, cardInfo);
+        TextArea txtDescricao = new TextArea();
+        txtDescricao.setPromptText("Descrição do plano");
+        txtDescricao.setPrefRowCount(3);
+
+        TextField txtObjetivo = new TextField();
+        txtObjetivo.setPromptText("Objetivo (hipertrofia, adaptação, etc.)");
+
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
+
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("Descrição:"), 0, 2);
+        formulario.add(txtDescricao, 1, 2);
+
+        formulario.add(new Label("Objetivo:"), 0, 3);
+        formulario.add(txtObjetivo, 1, 3);
+
+        formulario.getStyleClass().add("card");
+
+        // Botões
+        Button btnSalvar = new Button("Salvar");
+        btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnExcluir.setDisable(true);
+
+        Button btnLimpar = new Button("Limpar");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        HBox botoes = new HBox(12, btnSalvar, btnExcluir, btnLimpar);
+        botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
+
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
+
+        // Comportamento
+        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antigo, selecionado) -> {
+            if (selecionado != null) {
+                preencherFormularioPlanoTreino(selecionado, txtId, txtNome, txtDescricao, txtObjetivo);
+                btnSalvar.setText("Atualizar");
+                btnExcluir.setDisable(false);
+            }
+        });
+
+        btnLimpar.setOnAction(e -> limparSelecaoPlanoTreino(tabela, txtId, txtNome, txtDescricao, txtObjetivo, btnSalvar, btnExcluir));
+
+        btnSalvar.setOnAction(e -> {
+            if (!solicitarSenhaAdmin()) return;
+            PlanoTreinoVO selecionado = tabela.getSelectionModel().getSelectedItem();
+            try {
+                if (selecionado == null) {
+                    boolean sucesso = controller.criarPlanoTreino(txtNome.getText().trim(), txtDescricao.getText().trim(), txtObjetivo.getText().trim());
+                    if (sucesso) {
+                        mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de treino criado com sucesso", "");
+                    } else {
+                        mostrarAlerta(AlertType.ERROR, "Erro", "Não foi possível criar o plano de treino", "");
+                    }
+                } else {
+                    controller.atualizarPlanoTreino(selecionado, txtNome.getText().trim(), txtDescricao.getText().trim(), txtObjetivo.getText().trim());
+                    tabela.refresh();
+                    mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de treino atualizado com sucesso", "");
+                }
+                limparSelecaoPlanoTreino(tabela, txtId, txtNome, txtDescricao, txtObjetivo, btnSalvar, btnExcluir);
+            } catch (IllegalArgumentException ex) {
+                mostrarAlerta(AlertType.WARNING, "Dados inválidos", ex.getMessage(), "");
+            }
+        });
+
+        btnExcluir.setOnAction(e -> {
+            PlanoTreinoVO selecionado = tabela.getSelectionModel().getSelectedItem();
+            if (selecionado == null) return;
+            if (!solicitarSenhaAdmin()) return;
+
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Excluir plano de treino");
+            alert.setHeaderText("Tem certeza que deseja excluir este plano?");
+            alert.setContentText(selecionado.getNome());
+
+            alert.showAndWait().ifPresent(resposta -> {
+                if (resposta == ButtonType.OK) {
+                    boolean sucesso = controller.excluirPlanoTreino(selecionado);
+                    if (sucesso) {
+                        mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de treino excluído com sucesso", "");
+                        limparSelecaoPlanoTreino(tabela, txtId, txtNome, txtDescricao, txtObjetivo, btnSalvar, btnExcluir);
+                    } else {
+                        mostrarAlerta(AlertType.ERROR, "Erro", "Não foi possível excluir o plano de treino", "");
+                    }
+                }
+            });
+        });
 
         tab.setContent(conteudo);
         return tab;
@@ -526,15 +627,118 @@ public class GymSolverApp extends Application {
         barraBusca.setAlignment(Pos.CENTER_LEFT);
         barraBusca.setPadding(new Insets(0, 0, 8, 0));
 
-        // Formulário (simplificado para demonstração)
-        Label lblInfo = new Label("Funcionalidade de CRUD para Planos de Assinatura em desenvolvimento...");
-        lblInfo.getStyleClass().add("sobre-text");
+        // Formulário
+        TextField txtId = new TextField();
+        txtId.setPromptText("ID (gerado automaticamente)");
+        txtId.setDisable(true);
 
-        VBox cardInfo = new VBox(16, lblInfo);
-        cardInfo.getStyleClass().add("card");
+        TextField txtNome = new TextField();
+        txtNome.setPromptText("Nome do plano");
 
-        VBox conteudo = new VBox(16, barraBusca, tabela, cardInfo);
+        TextField txtValor = new TextField();
+        txtValor.setPromptText("Valor mensal (R$)");
+
+        TextField txtDuracao = new TextField();
+        txtDuracao.setPromptText("Duração em meses");
+
+        GridPane formulario = new GridPane();
+        formulario.setHgap(12);
+        formulario.setVgap(8);
+
+        formulario.add(new Label("ID:"), 0, 0);
+        formulario.add(txtId, 1, 0);
+
+        formulario.add(new Label("Nome:"), 0, 1);
+        formulario.add(txtNome, 1, 1);
+
+        formulario.add(new Label("Valor mensal:"), 0, 2);
+        formulario.add(txtValor, 1, 2);
+
+        formulario.add(new Label("Duração (meses):"), 0, 3);
+        formulario.add(txtDuracao, 1, 3);
+
+        formulario.getStyleClass().add("card");
+
+        // Botões
+        Button btnSalvar = new Button("Salvar");
+        btnSalvar.getStyleClass().add("button-primary");
+
+        Button btnExcluir = new Button("Excluir");
+        btnExcluir.getStyleClass().add("button-danger");
+        btnExcluir.setDisable(true);
+
+        Button btnLimpar = new Button("Limpar");
+        btnLimpar.getStyleClass().add("button-ghost");
+
+        HBox botoes = new HBox(12, btnSalvar, btnExcluir, btnLimpar);
+        botoes.setAlignment(Pos.CENTER_RIGHT);
+        botoes.setPadding(new Insets(12, 0, 0, 0));
+
+        VBox cardFormulario = new VBox(12, formulario, botoes);
+        cardFormulario.getStyleClass().add("card");
+
+        VBox conteudo = new VBox(16, barraBusca, tabela, cardFormulario);
         VBox.setVgrow(tabela, Priority.ALWAYS);
+
+        // Comportamento
+        tabela.getSelectionModel().selectedItemProperty().addListener((obs, antigo, selecionado) -> {
+            if (selecionado != null) {
+                preencherFormularioPlanoAssinatura(selecionado, txtId, txtNome, txtValor, txtDuracao);
+                btnSalvar.setText("Atualizar");
+                btnExcluir.setDisable(false);
+            }
+        });
+
+        btnLimpar.setOnAction(e -> limparSelecaoPlanoAssinatura(tabela, txtId, txtNome, txtValor, txtDuracao, btnSalvar, btnExcluir));
+
+        btnSalvar.setOnAction(e -> {
+            if (!solicitarSenhaAdmin()) return;
+            PlanoAssinaturaVO selecionado = tabela.getSelectionModel().getSelectedItem();
+            try {
+                double valor = Double.parseDouble(txtValor.getText().trim());
+                int duracao = Integer.parseInt(txtDuracao.getText().trim());
+                if (selecionado == null) {
+                    boolean sucesso = controller.criarPlanoAssinatura(txtNome.getText().trim(), valor, duracao);
+                    if (sucesso) {
+                        mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de assinatura criado com sucesso", "");
+                    } else {
+                        mostrarAlerta(AlertType.ERROR, "Erro", "Não foi possível criar o plano de assinatura", "");
+                    }
+                } else {
+                    controller.atualizarPlanoAssinatura(selecionado, txtNome.getText().trim(), valor, duracao);
+                    tabela.refresh();
+                    mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de assinatura atualizado com sucesso", "");
+                }
+                limparSelecaoPlanoAssinatura(tabela, txtId, txtNome, txtValor, txtDuracao, btnSalvar, btnExcluir);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta(AlertType.WARNING, "Dados inválidos", "Valor mensal e duração devem ser números.", "");
+            } catch (IllegalArgumentException ex) {
+                mostrarAlerta(AlertType.WARNING, "Dados inválidos", ex.getMessage(), "");
+            }
+        });
+
+        btnExcluir.setOnAction(e -> {
+            PlanoAssinaturaVO selecionado = tabela.getSelectionModel().getSelectedItem();
+            if (selecionado == null) return;
+            if (!solicitarSenhaAdmin()) return;
+
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Excluir plano de assinatura");
+            alert.setHeaderText("Tem certeza que deseja excluir este plano?");
+            alert.setContentText(selecionado.getNome());
+
+            alert.showAndWait().ifPresent(resposta -> {
+                if (resposta == ButtonType.OK) {
+                    boolean sucesso = controller.excluirPlanoAssinatura(selecionado);
+                    if (sucesso) {
+                        mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Plano de assinatura excluído com sucesso", "");
+                        limparSelecaoPlanoAssinatura(tabela, txtId, txtNome, txtValor, txtDuracao, btnSalvar, btnExcluir);
+                    } else {
+                        mostrarAlerta(AlertType.ERROR, "Erro", "Não foi possível excluir o plano de assinatura", "");
+                    }
+                }
+            });
+        });
 
         tab.setContent(conteudo);
         return tab;
@@ -778,6 +982,74 @@ public class GymSolverApp extends Application {
                 }
             }
         });
+    }
+
+    // ==================== MÉTODOS AUXILIARES PLANOS DE TREINO ====================
+    private void preencherFormularioPlanoTreino(PlanoTreinoVO plano, TextField txtId, TextField txtNome,
+                                                TextArea txtDescricao, TextField txtObjetivo) {
+        txtId.setText(String.valueOf(plano.getId()));
+        txtNome.setText(plano.getNome());
+        txtDescricao.setText(plano.getDescricao());
+        txtObjetivo.setText(plano.getObjetivo());
+    }
+
+    private void limparSelecaoPlanoTreino(TableView<PlanoTreinoVO> tabela, TextField txtId, TextField txtNome,
+                                          TextArea txtDescricao, TextField txtObjetivo,
+                                          Button btnSalvar, Button btnExcluir) {
+        tabela.getSelectionModel().clearSelection();
+        limparFormularioPlanoTreino(txtId, txtNome, txtDescricao, txtObjetivo);
+        btnSalvar.setText("Salvar");
+        btnExcluir.setDisable(true);
+    }
+
+    private void limparFormularioPlanoTreino(TextField txtId, TextField txtNome, TextArea txtDescricao,
+                                             TextField txtObjetivo) {
+        txtId.clear();
+        txtNome.clear();
+        txtDescricao.clear();
+        txtObjetivo.clear();
+    }
+
+    // ==================== MÉTODOS AUXILIARES PLANOS DE ASSINATURA ====================
+    private void preencherFormularioPlanoAssinatura(PlanoAssinaturaVO plano, TextField txtId, TextField txtNome,
+                                                    TextField txtValor, TextField txtDuracao) {
+        txtId.setText(String.valueOf(plano.getId()));
+        txtNome.setText(plano.getNome());
+        txtValor.setText(String.valueOf(plano.getValorMensal()));
+        txtDuracao.setText(String.valueOf(plano.getDuracaoMeses()));
+    }
+
+    private void limparSelecaoPlanoAssinatura(TableView<PlanoAssinaturaVO> tabela, TextField txtId, TextField txtNome,
+                                              TextField txtValor, TextField txtDuracao,
+                                              Button btnSalvar, Button btnExcluir) {
+        tabela.getSelectionModel().clearSelection();
+        limparFormularioPlanoAssinatura(txtId, txtNome, txtValor, txtDuracao);
+        btnSalvar.setText("Salvar");
+        btnExcluir.setDisable(true);
+    }
+
+    private void limparFormularioPlanoAssinatura(TextField txtId, TextField txtNome,
+                                                 TextField txtValor, TextField txtDuracao) {
+        txtId.clear();
+        txtNome.clear();
+        txtValor.clear();
+        txtDuracao.clear();
+    }
+
+    // ==================== MÉTODO AUXILIAR DE SENHA ADMIN ====================
+    private boolean solicitarSenhaAdmin() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Autorização necessária");
+        dialog.setHeaderText("Informe a senha de administrador para continuar");
+        dialog.setContentText("Senha:");
+
+        var resposta = dialog.showAndWait();
+        if (resposta.isPresent() && ADMIN_PASSWORD.equals(resposta.get().trim())) {
+            return true;
+        }
+
+        mostrarAlerta(AlertType.ERROR, "Acesso negado", "Senha incorreta ou operação cancelada", "");
+        return false;
     }
 
     // ==================== MÉTODO AUXILIAR GERAL ====================

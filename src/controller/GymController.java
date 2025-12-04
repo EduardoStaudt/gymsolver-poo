@@ -92,6 +92,50 @@ public class GymController {
     public ObservableList<PlanoAssinaturaVO> getPlanosAssinatura() {
         return gymBO.getPlanosAssinatura();
     }
+
+    public boolean criarPlanoTreino(String nome, String descricao, String objetivo) {
+        try {
+            gymBO.criarPlanoTreino(nome, descricao, objetivo);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void atualizarPlanoTreino(PlanoTreinoVO plano, String nome, String descricao, String objetivo) {
+        gymBO.atualizarPlanoTreino(plano, nome, descricao, objetivo);
+    }
+
+    public boolean excluirPlanoTreino(PlanoTreinoVO plano) {
+        try {
+            gymBO.excluirPlanoTreino(plano);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean criarPlanoAssinatura(String nome, double valorMensal, int duracaoMeses) {
+        try {
+            gymBO.criarPlanoAssinatura(nome, valorMensal, duracaoMeses);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void atualizarPlanoAssinatura(PlanoAssinaturaVO plano, String nome, double valorMensal, int duracaoMeses) {
+        gymBO.atualizarPlanoAssinatura(plano, nome, valorMensal, duracaoMeses);
+    }
+
+    public boolean excluirPlanoAssinatura(PlanoAssinaturaVO plano) {
+        try {
+            gymBO.excluirPlanoAssinatura(plano);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     
     // ==================== VALIDAÇÕES ====================
     public boolean validarCliente(String nome, String email, String telefone,

@@ -25,6 +25,23 @@ public class PlanoTreinoBO {
         academiaDAO.inserirPlanoTreino(plano);
         return plano;
     }
+
+    public void atualizar(PlanoTreinoVO plano, String nome, String descricao, String objetivo) {
+        if (plano == null) return;
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do plano de treino é obrigatório");
+        }
+        plano.setNome(nome.trim());
+        plano.setDescricao(descricao);
+        plano.setObjetivo(objetivo);
+        academiaDAO.atualizarPlanoTreino(plano);
+    }
+
+    public void excluir(PlanoTreinoVO plano) {
+        if (plano != null) {
+            academiaDAO.excluirPlanoTreino(plano);
+        }
+    }
     
     public int total() {
         return academiaDAO.getPlanosTreino().size();

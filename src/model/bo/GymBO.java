@@ -77,6 +77,30 @@ public class GymBO {
     public ObservableList<PlanoAssinaturaVO> getPlanosAssinatura() {
         return planoAssinaturaBO.listarTodos();
     }
+
+    public PlanoTreinoVO criarPlanoTreino(String nome, String descricao, String objetivo) {
+        return planoTreinoBO.criar(nome, descricao, objetivo);
+    }
+
+    public void atualizarPlanoTreino(PlanoTreinoVO plano, String nome, String descricao, String objetivo) {
+        planoTreinoBO.atualizar(plano, nome, descricao, objetivo);
+    }
+
+    public void excluirPlanoTreino(PlanoTreinoVO plano) {
+        planoTreinoBO.excluir(plano);
+    }
+
+    public PlanoAssinaturaVO criarPlanoAssinatura(String nome, double valorMensal, int duracaoMeses) {
+        return planoAssinaturaBO.criar(nome, valorMensal, duracaoMeses);
+    }
+
+    public void atualizarPlanoAssinatura(PlanoAssinaturaVO plano, String nome, double valorMensal, int duracaoMeses) {
+        planoAssinaturaBO.atualizar(plano, nome, valorMensal, duracaoMeses);
+    }
+
+    public void excluirPlanoAssinatura(PlanoAssinaturaVO plano) {
+        planoAssinaturaBO.excluir(plano);
+    }
     
     // ==================== VALIDAÇÕES ====================
     

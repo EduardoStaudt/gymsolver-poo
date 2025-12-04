@@ -215,6 +215,32 @@ public class AcademiaDAO {
         }
     }
 
+    public void atualizarPlanoTreino(PlanoTreinoVO plano) {
+        String sql = "UPDATE plano_treino SET nome = ?, descricao = ?, objetivo = ? WHERE id = ?";
+        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, plano.getNome());
+            ps.setString(2, plano.getDescricao());
+            ps.setString(3, plano.getObjetivo());
+            ps.setInt(4, plano.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar plano de treino", e);
+        }
+    }
+
+    public void excluirPlanoTreino(PlanoTreinoVO plano) {
+        String sql = "DELETE FROM plano_treino WHERE id = ?";
+        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, plano.getId());
+            ps.executeUpdate();
+            planosTreino.remove(plano);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao excluir plano de treino", e);
+        }
+    }
+
     public void inserirPlanoAssinatura(PlanoAssinaturaVO plano) {
         String sql = "INSERT INTO plano_assinatura (id, nome, valor_mensal, duracao_meses) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
@@ -227,6 +253,32 @@ public class AcademiaDAO {
             planosAssinatura.add(plano);
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao inserir plano de assinatura", e);
+        }
+    }
+
+    public void atualizarPlanoAssinatura(PlanoAssinaturaVO plano) {
+        String sql = "UPDATE plano_assinatura SET nome = ?, valor_mensal = ?, duracao_meses = ? WHERE id = ?";
+        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, plano.getNome());
+            ps.setDouble(2, plano.getValorMensal());
+            ps.setInt(3, plano.getDuracaoMeses());
+            ps.setInt(4, plano.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar plano de assinatura", e);
+        }
+    }
+
+    public void excluirPlanoAssinatura(PlanoAssinaturaVO plano) {
+        String sql = "DELETE FROM plano_assinatura WHERE id = ?";
+        try (Connection conn = ConnectionFactory.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, plano.getId());
+            ps.executeUpdate();
+            planosAssinatura.remove(plano);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao excluir plano de assinatura", e);
         }
     }
 
