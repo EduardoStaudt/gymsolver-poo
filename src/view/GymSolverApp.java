@@ -290,7 +290,7 @@ public class GymSolverApp extends Application {
 
         btnLimpar.setOnAction(e -> limparSelecaoCliente(tabela, txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir));
 
-        btnSalvar.setOnAction(e -> salvarCliente(tabela, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino, btnSalvar));
+        btnSalvar.setOnAction(e -> salvarCliente(tabela, txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir));
 
         btnExcluir.setOnAction(e -> excluirCliente(tabela, txtId, txtNome, txtEmail, txtTelefone, cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir));
 
@@ -411,7 +411,7 @@ public class GymSolverApp extends Application {
 
         btnLimpar.setOnAction(e -> limparSelecaoFuncionario(tabela, txtId, txtNome, txtCargo, txtCpf, btnSalvar, btnExcluir));
 
-        btnSalvar.setOnAction(e -> salvarFuncionario(tabela, txtNome, txtCargo, txtCpf, btnSalvar));
+        btnSalvar.setOnAction(e -> salvarFuncionario(tabela, txtId, txtNome, txtCargo, txtCpf, btnSalvar, btnExcluir));
 
         btnExcluir.setOnAction(e -> excluirFuncionario(tabela, txtId, txtNome, txtCargo, txtCpf, btnSalvar, btnExcluir));
 
@@ -658,9 +658,9 @@ public class GymSolverApp extends Application {
         cbPlanoTreino.getSelectionModel().clearSelection();
     }
 
-    private void salvarCliente(TableView<ClienteVO> tabela, TextField txtNome, TextField txtEmail,
+    private void salvarCliente(TableView<ClienteVO> tabela, TextField txtId, TextField txtNome, TextField txtEmail,
                             TextField txtTelefone, ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
-                            ComboBox<PlanoTreinoVO> cbPlanoTreino, Button btnSalvar) {
+                            ComboBox<PlanoTreinoVO> cbPlanoTreino, Button btnSalvar, Button btnExcluir) {
         ClienteVO selecionado = tabela.getSelectionModel().getSelectedItem();
 
         if (!controller.validarCliente(txtNome.getText(), txtEmail.getText(), txtTelefone.getText(),
@@ -690,8 +690,8 @@ public class GymSolverApp extends Application {
             mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Cliente atualizado com sucesso", "");
         }
 
-        limparSelecaoCliente(tabela, new TextField(), txtNome, txtEmail, txtTelefone, 
-                            cbPlanoAssinatura, cbPlanoTreino, btnSalvar, new Button());
+        limparSelecaoCliente(tabela, txtId, txtNome, txtEmail, txtTelefone,
+                            cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir);
     }
 
     private void excluirCliente(TableView<ClienteVO> tabela, TextField txtId, TextField txtNome,
@@ -734,8 +734,8 @@ public class GymSolverApp extends Application {
         btnExcluir.setDisable(true);
     }
 
-    private void salvarFuncionario(TableView<FuncionarioVO> tabela, TextField txtNome,
-                                TextField txtCargo, TextField txtCpf, Button btnSalvar) {
+    private void salvarFuncionario(TableView<FuncionarioVO> tabela, TextField txtId, TextField txtNome,
+                                TextField txtCargo, TextField txtCpf, Button btnSalvar, Button btnExcluir) {
         FuncionarioVO selecionado = tabela.getSelectionModel().getSelectedItem();
 
         if (selecionado == null) {
@@ -753,7 +753,7 @@ public class GymSolverApp extends Application {
             mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Funcionário atualizado com sucesso", "");
         }
 
-        limparSelecaoFuncionario(tabela, new TextField(), txtNome, txtCargo, txtCpf, btnSalvar, new Button());
+        limparSelecaoFuncionario(tabela, txtId, txtNome, txtCargo, txtCpf, btnSalvar, btnExcluir);
     }
 
     private void excluirFuncionario(TableView<FuncionarioVO> tabela, TextField txtId, TextField txtNome,

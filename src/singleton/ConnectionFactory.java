@@ -2,8 +2,11 @@ package singleton;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 
 /**
  * Singleton responsável pela conexão JDBC com o banco de dados.
@@ -65,10 +68,32 @@ public class ConnectionFactory {
         try (Connection conn = getInstance().getConnection(); Statement stmt = conn.createStatement()) {
 
             stmt.execute(sqlUsuario);
+            inserirAdminDefault(conn);
 
         } catch (SQLException e) {
             e.printStackTrace();
             throw new RuntimeException("Erro ao criar as tabelas do banco", e);
+        }
+    }
+
+    /**
+     * Insere um usuário admin padrão caso a tabela esteja vazia.
+     */
+    private static void inserirAdminDefault(Connection conn) throws SQLException {
+        String sqlCount = "SELECT COUNT(*) FROM usuario";
+        try (PreparedStatement ps = conn.prepareStatement(sqlCount); ResultSet rs = ps.executeQuery()) {
+            if (rs.next() && rs.getInt(1) > 0) {
+                return; // já existe usuário cadastrado
+            }
+        }
+
+        String sqlInsert = "INSERT INTO usuario (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
+            ps.setString(1, "Administrador");
+            ps.setString(2, "admin@gym.com");
+            ps.setString(3, "123");
+            ps.setString(4, LocalDate.now().toString());
+            ps.executeUpdate();
         }
     }
 }
