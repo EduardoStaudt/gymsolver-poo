@@ -1,5 +1,6 @@
 package view;
 
+import singleton.ConnectionFactory;
 import controller.GymController;
 import model.vo.ClienteVO;
 import model.vo.FuncionarioVO;
@@ -31,6 +32,8 @@ public class GymSolverApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // inicializa o banco (cria tabelas e usuário admin, se você fez isso no initDatabase)
+        ConnectionFactory.initDatabase();
         this.controller = new GymController();
         mostrarTelaLogin(primaryStage);
     }
@@ -45,7 +48,7 @@ public class GymSolverApp extends Application {
 
         Label lblUsuario = new Label("Usuário");
         TextField txtUsuario = new TextField();
-        txtUsuario.setPromptText("admin");
+        txtUsuario.setPromptText("admin@gym.com");
 
         Label lblSenha = new Label("Senha");
         PasswordField txtSenha = new PasswordField();
@@ -55,15 +58,17 @@ public class GymSolverApp extends Application {
         btnEntrar.getStyleClass().add("button-primary");
 
         btnEntrar.setOnAction(e -> {
-            String u = txtUsuario.getText();
-            String s = txtSenha.getText();
+            String email = txtUsuario.getText();
+            String senha = txtSenha.getText();
 
-            if ("admin".equals(u) && "123".equals(s)) {
+            boolean autenticado = controller.autenticarUsuario(email, senha);
+
+            if (autenticado) {
                 mostrarTelaPrincipal(stage);
             } else {
-                mostrarAlerta(AlertType.ERROR, "Login inválido", 
-                    "Usuário ou senha incorretos", 
-                    "Use usuário: admin   |   senha: 123");
+                mostrarAlerta(AlertType.ERROR, "Login inválido",
+                        "Usuário ou senha incorretos",
+                        "Tente novamente com um usuário cadastrado.");
             }
         });
 
@@ -601,7 +606,9 @@ public class GymSolverApp extends Application {
         );
         p2.getStyleClass().add("sobre-text");
 
-        Label p3 = new Label("Este é um protótipo acadêmico com dados armazenados em memória (sem banco de dados).");
+        Label p3 = new Label(
+            "Este é um protótipo acadêmico que utiliza JavaFX, arquitetura MVC e integração com banco de dados via JDBC (SQLite)."
+        );
         p3.getStyleClass().add("sobre-text");
 
         VBox texto = new VBox(6, titulo, p1, p2, p3);
@@ -618,9 +625,9 @@ public class GymSolverApp extends Application {
 
     // ==================== MÉTODOS AUXILIARES CLIENTES ====================
     private void preencherFormularioCliente(ClienteVO cliente, TextField txtId, TextField txtNome, 
-                                          TextField txtEmail, TextField txtTelefone,
-                                          ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura, 
-                                          ComboBox<PlanoTreinoVO> cbPlanoTreino) {
+                                            TextField txtEmail, TextField txtTelefone,
+                                            ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura, 
+                                            ComboBox<PlanoTreinoVO> cbPlanoTreino) {
         txtId.setText(String.valueOf(cliente.getId()));
         txtNome.setText(cliente.getNome());
         txtEmail.setText(cliente.getEmail());
@@ -641,8 +648,8 @@ public class GymSolverApp extends Application {
     }
 
     private void limparFormularioCliente(TextField txtId, TextField txtNome, TextField txtEmail,
-                                       TextField txtTelefone, ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
-                                       ComboBox<PlanoTreinoVO> cbPlanoTreino) {
+                                        TextField txtTelefone, ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
+                                        ComboBox<PlanoTreinoVO> cbPlanoTreino) {
         txtId.clear();
         txtNome.clear();
         txtEmail.clear();
@@ -652,14 +659,14 @@ public class GymSolverApp extends Application {
     }
 
     private void salvarCliente(TableView<ClienteVO> tabela, TextField txtNome, TextField txtEmail,
-                             TextField txtTelefone, ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
-                             ComboBox<PlanoTreinoVO> cbPlanoTreino, Button btnSalvar) {
+                            TextField txtTelefone, ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
+                            ComboBox<PlanoTreinoVO> cbPlanoTreino, Button btnSalvar) {
         ClienteVO selecionado = tabela.getSelectionModel().getSelectedItem();
 
         if (!controller.validarCliente(txtNome.getText(), txtEmail.getText(), txtTelefone.getText(),
-                                     cbPlanoAssinatura.getValue(), cbPlanoTreino.getValue())) {
+                                    cbPlanoAssinatura.getValue(), cbPlanoTreino.getValue())) {
             String erros = controller.getErrosValidacaoCliente(txtNome.getText(), txtEmail.getText(), txtTelefone.getText(),
-                                                             cbPlanoAssinatura.getValue(), cbPlanoTreino.getValue());
+                                                            cbPlanoAssinatura.getValue(), cbPlanoTreino.getValue());
             mostrarAlerta(AlertType.WARNING, "Dados inválidos", "Não foi possível salvar o cliente", erros);
             return;
         }
@@ -677,21 +684,21 @@ public class GymSolverApp extends Application {
         } else {
             // Atualizar cliente
             controller.atualizarCliente(selecionado, txtNome.getText().trim(), txtEmail.getText().trim(),
-                                      txtTelefone.getText().trim(), cbPlanoAssinatura.getValue(),
-                                      cbPlanoTreino.getValue());
+                                        txtTelefone.getText().trim(), cbPlanoAssinatura.getValue(),
+                                        cbPlanoTreino.getValue());
             tabela.refresh();
             mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Cliente atualizado com sucesso", "");
         }
 
         limparSelecaoCliente(tabela, new TextField(), txtNome, txtEmail, txtTelefone, 
-                           cbPlanoAssinatura, cbPlanoTreino, btnSalvar, new Button());
+                            cbPlanoAssinatura, cbPlanoTreino, btnSalvar, new Button());
     }
 
     private void excluirCliente(TableView<ClienteVO> tabela, TextField txtId, TextField txtNome,
-                              TextField txtEmail, TextField txtTelefone,
-                              ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
-                              ComboBox<PlanoTreinoVO> cbPlanoTreino,
-                              Button btnSalvar, Button btnExcluir) {
+                                TextField txtEmail, TextField txtTelefone,
+                                ComboBox<PlanoAssinaturaVO> cbPlanoAssinatura,
+                                ComboBox<PlanoTreinoVO> cbPlanoTreino,
+                                Button btnSalvar, Button btnExcluir) {
         ClienteVO selecionado = tabela.getSelectionModel().getSelectedItem();
         if (selecionado == null) return;
 
@@ -706,7 +713,7 @@ public class GymSolverApp extends Application {
                 if (sucesso) {
                     mostrarAlerta(AlertType.INFORMATION, "Sucesso", "Cliente excluído com sucesso", "");
                     limparSelecaoCliente(tabela, txtId, txtNome, txtEmail, txtTelefone, 
-                                       cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir);
+                                        cbPlanoAssinatura, cbPlanoTreino, btnSalvar, btnExcluir);
                 } else {
                     mostrarAlerta(AlertType.ERROR, "Erro", "Não foi possível excluir o cliente", "");
                 }
@@ -728,7 +735,7 @@ public class GymSolverApp extends Application {
     }
 
     private void salvarFuncionario(TableView<FuncionarioVO> tabela, TextField txtNome,
-                                 TextField txtCargo, TextField txtCpf, Button btnSalvar) {
+                                TextField txtCargo, TextField txtCpf, Button btnSalvar) {
         FuncionarioVO selecionado = tabela.getSelectionModel().getSelectedItem();
 
         if (selecionado == null) {
@@ -750,8 +757,8 @@ public class GymSolverApp extends Application {
     }
 
     private void excluirFuncionario(TableView<FuncionarioVO> tabela, TextField txtId, TextField txtNome,
-                                  TextField txtCargo, TextField txtCpf,
-                                  Button btnSalvar, Button btnExcluir) {
+                                    TextField txtCargo, TextField txtCpf,
+                                    Button btnSalvar, Button btnExcluir) {
         FuncionarioVO selecionado = tabela.getSelectionModel().getSelectedItem();
         if (selecionado == null) return;
 
