@@ -29,6 +29,26 @@ public class PlanoAssinaturaBO {
         academiaDAO.inserirPlanoAssinatura(plano);
         return plano;
     }
+
+    public void atualizar(PlanoAssinaturaVO plano, String nome, double valorMensal, int duracaoMeses) {
+        if (plano == null) return;
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new IllegalArgumentException("Nome do plano de assinatura é obrigatório");
+        }
+        if (valorMensal <= 0) {
+            throw new IllegalArgumentException("Valor mensal deve ser maior que zero");
+        }
+        plano.setNome(nome.trim());
+        plano.setValorMensal(valorMensal);
+        plano.setDuracaoMeses(duracaoMeses);
+        academiaDAO.atualizarPlanoAssinatura(plano);
+    }
+
+    public void excluir(PlanoAssinaturaVO plano) {
+        if (plano != null) {
+            academiaDAO.excluirPlanoAssinatura(plano);
+        }
+    }
     
     public int total() {
         return academiaDAO.getPlanosAssinatura().size();

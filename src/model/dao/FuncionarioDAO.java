@@ -17,6 +17,10 @@ public class FuncionarioDAO {
     public void salvar(FuncionarioVO funcionario) {
         academiaDAO.inserirFuncionario(funcionario);
     }
+
+    public void atualizar(FuncionarioVO funcionario) {
+        academiaDAO.atualizarFuncionario(funcionario);
+    }
     
     public void excluir(FuncionarioVO funcionario) {
         academiaDAO.excluirFuncionario(funcionario);

@@ -46,6 +46,7 @@ public class ClienteBO {
             cliente.setTelefone(telefone.trim());
             cliente.setPlanoAssinatura(planoAssinatura);
             cliente.setPlanoTreino(planoTreino);
+            clienteDAO.atualizar(cliente);
         }
     }
     

@@ -36,6 +36,7 @@ public class FuncionarioBO {
             funcionario.setNome(nome.trim());
             funcionario.setCargo(cargo.trim());
             funcionario.setCpf(cpf.trim());
+            funcionarioDAO.atualizar(funcionario);
         }
     }
     

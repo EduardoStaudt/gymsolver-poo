@@ -27,6 +27,10 @@ public class ClienteDAO {
     public void salvar(ClienteVO cliente) {
         academiaDAO.inserirCliente(cliente);
     }
+
+    public void atualizar(ClienteVO cliente) {
+        academiaDAO.atualizarCliente(cliente);
+    }
     
     public void excluir(ClienteVO cliente) {
         academiaDAO.excluirCliente(cliente);

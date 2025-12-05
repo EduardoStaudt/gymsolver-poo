@@ -4,15 +4,20 @@ import model.bo.GymBO;
 import model.vo.*;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import model.dao.UsuarioDAO;
+import model.dao.UsuarioDAOImpl;
+import java.sql.SQLException;
 
 /**
  * Controller - Camada de interface entre View e Model
  */
 public class GymController {
     private final GymBO gymBO;
-    
+    private final UsuarioDAO usuarioDAO;  // << novo
+
     public GymController() {
         this.gymBO = new GymBO();
+        this.usuarioDAO = new UsuarioDAOImpl(); // << novo
     }
     
     // ==================== CLIENTES ====================
@@ -25,7 +30,7 @@ public class GymController {
     }
     
     public boolean criarCliente(String nome, String email, String telefone,
-                              PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
+                            PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
         try {
             gymBO.criarCliente(nome, email, telefone, planoAssinatura, planoTreino);
             return true;
@@ -35,7 +40,7 @@ public class GymController {
     }
     
     public void atualizarCliente(ClienteVO cliente, String nome, String email, String telefone,
-                               PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
+                            PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
         gymBO.atualizarCliente(cliente, nome, email, telefone, planoAssinatura, planoTreino);
     }
     
@@ -87,6 +92,50 @@ public class GymController {
     public ObservableList<PlanoAssinaturaVO> getPlanosAssinatura() {
         return gymBO.getPlanosAssinatura();
     }
+
+    public boolean criarPlanoTreino(String nome, String descricao, String objetivo) {
+        try {
+            gymBO.criarPlanoTreino(nome, descricao, objetivo);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void atualizarPlanoTreino(PlanoTreinoVO plano, String nome, String descricao, String objetivo) {
+        gymBO.atualizarPlanoTreino(plano, nome, descricao, objetivo);
+    }
+
+    public boolean excluirPlanoTreino(PlanoTreinoVO plano) {
+        try {
+            gymBO.excluirPlanoTreino(plano);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean criarPlanoAssinatura(String nome, double valorMensal, int duracaoMeses) {
+        try {
+            gymBO.criarPlanoAssinatura(nome, valorMensal, duracaoMeses);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void atualizarPlanoAssinatura(PlanoAssinaturaVO plano, String nome, double valorMensal, int duracaoMeses) {
+        gymBO.atualizarPlanoAssinatura(plano, nome, valorMensal, duracaoMeses);
+    }
+
+    public boolean excluirPlanoAssinatura(PlanoAssinaturaVO plano) {
+        try {
+            gymBO.excluirPlanoAssinatura(plano);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
     
     // ==================== VALIDAÇÕES ====================
     public boolean validarCliente(String nome, String email, String telefone,
@@ -95,7 +144,7 @@ public class GymController {
     }
     
     public String getErrosValidacaoCliente(String nome, String email, String telefone,
-                                         PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
+                                        PlanoAssinaturaVO planoAssinatura, PlanoTreinoVO planoTreino) {
         return gymBO.getErrosValidacaoCliente(nome, email, telefone, planoAssinatura, planoTreino);
     }
     
@@ -114,5 +163,20 @@ public class GymController {
     
     public int getTotalPlanosAssinatura() {
         return gymBO.getTotalPlanosAssinatura();
+    }
+        // ==================== LOGIN / USUÁRIOS ====================
+    /**
+     * Autentica um usuário usando o DAO.
+     * Retorna true se existir um usuário com esse email/senha.
+     */
+    public boolean autenticarUsuario(String email, String senha) {
+        try {
+            var usuario = usuarioDAO.buscarPorEmailSenha(email, senha);
+            return usuario != null;
+        } catch (SQLException e) {
+            // aqui você pode logar/mostrar mensagem se quiser
+            e.printStackTrace();
+            return false;
+        }
     }
 }
