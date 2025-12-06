@@ -66,7 +66,7 @@ public class AcademiaDAO {
             }
 
             try (PreparedStatement ps = conn.prepareStatement("SELECT id, nome, cargo, cpf FROM funcionario");
-                 ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     funcionarios.add(new FuncionarioVO(
                             rs.getInt("id"),
@@ -87,7 +87,7 @@ public class AcademiaDAO {
             }
 
             try (PreparedStatement ps = conn.prepareStatement("SELECT id, nome, email, telefone, plano_assinatura_id, plano_treino_id FROM cliente");
-                 ResultSet rs = ps.executeQuery()) {
+                ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     PlanoAssinaturaVO planoAssin = planosAssinMap.get(rs.getInt("plano_assinatura_id"));
                     PlanoTreinoVO planoTreino = planosTreinoMap.get(rs.getInt("plano_treino_id"));
@@ -117,7 +117,7 @@ public class AcademiaDAO {
     public void inserirCliente(ClienteVO cliente) {
         String sql = "INSERT INTO cliente (id, nome, email, telefone, plano_assinatura_id, plano_treino_id) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, cliente.getId());
             ps.setString(2, cliente.getNome());
             ps.setString(3, cliente.getEmail());
@@ -134,7 +134,7 @@ public class AcademiaDAO {
     public void atualizarCliente(ClienteVO cliente) {
         String sql = "UPDATE cliente SET nome = ?, email = ?, telefone = ?, plano_assinatura_id = ?, plano_treino_id = ? WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, cliente.getNome());
             ps.setString(2, cliente.getEmail());
             ps.setString(3, cliente.getTelefone());
@@ -150,7 +150,7 @@ public class AcademiaDAO {
     public void excluirCliente(ClienteVO cliente) {
         String sql = "DELETE FROM cliente WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, cliente.getId());
             ps.executeUpdate();
             clientes.remove(cliente);
@@ -162,7 +162,7 @@ public class AcademiaDAO {
     public void inserirFuncionario(FuncionarioVO funcionario) {
         String sql = "INSERT INTO funcionario (id, nome, cargo, cpf) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, funcionario.getId());
             ps.setString(2, funcionario.getNome());
             ps.setString(3, funcionario.getCargo());
@@ -177,7 +177,7 @@ public class AcademiaDAO {
     public void atualizarFuncionario(FuncionarioVO funcionario) {
         String sql = "UPDATE funcionario SET nome = ?, cargo = ?, cpf = ? WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, funcionario.getNome());
             ps.setString(2, funcionario.getCargo());
             ps.setString(3, funcionario.getCpf());
@@ -191,7 +191,7 @@ public class AcademiaDAO {
     public void excluirFuncionario(FuncionarioVO funcionario) {
         String sql = "DELETE FROM funcionario WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, funcionario.getId());
             ps.executeUpdate();
             funcionarios.remove(funcionario);
@@ -203,7 +203,7 @@ public class AcademiaDAO {
     public void inserirPlanoTreino(PlanoTreinoVO plano) {
         String sql = "INSERT INTO plano_treino (id, nome, descricao, objetivo) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, plano.getId());
             ps.setString(2, plano.getNome());
             ps.setString(3, plano.getDescricao());
@@ -218,7 +218,7 @@ public class AcademiaDAO {
     public void atualizarPlanoTreino(PlanoTreinoVO plano) {
         String sql = "UPDATE plano_treino SET nome = ?, descricao = ?, objetivo = ? WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, plano.getNome());
             ps.setString(2, plano.getDescricao());
             ps.setString(3, plano.getObjetivo());
@@ -232,7 +232,7 @@ public class AcademiaDAO {
     public void excluirPlanoTreino(PlanoTreinoVO plano) {
         String sql = "DELETE FROM plano_treino WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, plano.getId());
             ps.executeUpdate();
             planosTreino.remove(plano);
@@ -244,7 +244,7 @@ public class AcademiaDAO {
     public void inserirPlanoAssinatura(PlanoAssinaturaVO plano) {
         String sql = "INSERT INTO plano_assinatura (id, nome, valor_mensal, duracao_meses) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, plano.getId());
             ps.setString(2, plano.getNome());
             ps.setDouble(3, plano.getValorMensal());
@@ -259,7 +259,7 @@ public class AcademiaDAO {
     public void atualizarPlanoAssinatura(PlanoAssinaturaVO plano) {
         String sql = "UPDATE plano_assinatura SET nome = ?, valor_mensal = ?, duracao_meses = ? WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, plano.getNome());
             ps.setDouble(2, plano.getValorMensal());
             ps.setInt(3, plano.getDuracaoMeses());
@@ -273,7 +273,7 @@ public class AcademiaDAO {
     public void excluirPlanoAssinatura(PlanoAssinaturaVO plano) {
         String sql = "DELETE FROM plano_assinatura WHERE id = ?";
         try (Connection conn = ConnectionFactory.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, plano.getId());
             ps.executeUpdate();
             planosAssinatura.remove(plano);
